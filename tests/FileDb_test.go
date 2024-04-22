@@ -78,6 +78,8 @@ func TestGet(t *testing.T) {
 				user.Age, "got =", saved_user.Age)
 		}
 
+		DB.DeleteDb()
+
 	} else {
 		t.Fatal("TestGet: failed to Save")
 	}
