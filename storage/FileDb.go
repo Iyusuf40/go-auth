@@ -23,7 +23,7 @@ func (db *FileDb) New(db_path string) (*FileDb, error) {
 		return db, nil
 	}
 
-	json.Unmarshal(content, &(db.inMemoryStore))
+	err = json.Unmarshal(content, &(db.inMemoryStore))
 	if err != nil {
 		return nil, err
 	}
