@@ -38,12 +38,16 @@ func (db *FileDb) AllRecordsCount() int {
 func (db *FileDb) Save(obj any) (string, error) {
 	uid := uuid.NewString()
 	id := reflect.TypeOf(obj).Name() + "-" + uid
-	_, err := json.Marshal(obj) // test if it can be jsoned
+	json_rep, err := json.Marshal(obj) // test if it can be jsoned
 	if err != nil {
 		return "", err
 	}
 
-	db.inMemoryStore[id] = obj
+	// save map[string]any rep
+	var saved_version map[string]any
+	json.Unmarshal(json_rep, &saved_version)
+
+	db.inMemoryStore[id] = saved_version
 
 	return id, nil
 }
@@ -70,8 +74,9 @@ func (db *FileDb) Update(id string, data UpdateDesc) bool {
 
 	obj := db.inMemoryStore[id]
 
-	if conc_obj, ok := obj.(map[string]any); ok {
-		conc_obj[data.field] = data.value
+	if concrete_obj, ok := obj.(map[string]any); ok {
+		concrete_obj[data.Field] = data.Value
+		db.inMemoryStore[id] = concrete_obj
 	} else {
 		panic("typeof inMemoryStore[id] is not map[string]any")
 	}

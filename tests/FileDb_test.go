@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"os"
 	"testing"
 
 	"github.com/Iyusuf40/go-auth/storage"
@@ -47,11 +48,7 @@ func TestSaveAndGet(t *testing.T) {
 			t.Fatal("TestGet: early fail")
 		}
 
-		saved_user, ok := obj.(User)
-
-		if !ok {
-			t.Fatal("TestGet: object doesnt impl User interface")
-		}
+		saved_user := new(User).buildUser(obj)
 
 		if saved_user.Name != user.Name {
 			t.Fatal(
@@ -72,10 +69,8 @@ func TestSaveAndGet(t *testing.T) {
 		if obj == nil {
 			t.Fatal("TestGet: early fail")
 		}
-		saved_user = *new(User).buildUser(obj)
-		if !ok {
-			t.Fatal("TestGet: object doesnt impl User interface")
-		}
+
+		saved_user = new(User).buildUser(obj)
 
 		if saved_user.Name != user.Name {
 			t.Fatal(
@@ -93,6 +88,71 @@ func TestSaveAndGet(t *testing.T) {
 
 	} else {
 		t.Fatal("TestGet: failed to Save")
+	}
+}
+
+func TestUpdate(t *testing.T) {
+
+	beforeEach()
+	defer afterEach()
+
+	user := User{"test", 20}
+	id, _ := DB.Save(user)
+	updated_name := "updated_name"
+
+	resp := DB.Update(id, storage.UpdateDesc{
+		Field: "name",
+		Value: updated_name})
+
+	if !resp {
+		t.Fatal("TestUpdate: failed to update")
+	}
+
+	obj, _ := DB.Get(id)
+	saved_user := new(User).buildUser(obj)
+
+	if saved_user.Name != updated_name {
+		t.Fatal(
+			"TestUpdate: failed to update Name field " +
+				"expected " + updated_name + " got " + saved_user.Name,
+		)
+	}
+
+	// test after reload
+	DB.Commit()
+	DB.Reload()
+
+	if DB.AllRecordsCount() != 1 {
+		t.Fatal("TestUpdate: all records count should be 1")
+	}
+
+	obj, _ = DB.Get(id)
+	saved_user = new(User).buildUser(obj)
+
+	if saved_user.Name != updated_name {
+		t.Fatal(
+			"TestUpdate: failed to update Name field " +
+				"expected " + updated_name + " got " + saved_user.Name,
+		)
+	}
+}
+
+func TestDelete(t *testing.T) {
+
+	beforeEach()
+	defer afterEach()
+
+	user := User{"test", 20}
+	id, _ := DB.Save(user)
+
+	if DB.AllRecordsCount() != 1 {
+		t.Fatal("TestReload: records in inMemoryStore should be 1")
+	}
+
+	DB.Delete(id)
+
+	if DB.AllRecordsCount() != 0 {
+		t.Fatal("TestReload: records in inMemoryStore should be 0")
 	}
 }
 
@@ -140,21 +200,28 @@ func TestReload(t *testing.T) {
 
 }
 
-func TestDelete(t *testing.T) {
+func TestCommit_DeleteDb(t *testing.T) {
 
 	beforeEach()
 	defer afterEach()
 
-	user := User{"test", 20}
-	id, _ := DB.Save(user)
-
-	if DB.AllRecordsCount() != 1 {
-		t.Fatal("TestReload: records in inMemoryStore should be 1")
+	// test db_file does not exist
+	_, err := os.Stat(test_db_path)
+	if err == nil {
+		t.Fatal("TestCommit_DeleteDb: db_file should not exist")
 	}
 
-	DB.Delete(id)
+	// test db_file should exist after commit
+	DB.Commit()
+	_, err = os.Stat(test_db_path)
+	if err != nil {
+		t.Fatal("TestCommit_DeleteDb: db_file should exist")
+	}
 
-	if DB.AllRecordsCount() != 0 {
-		t.Fatal("TestReload: records in inMemoryStore should be 0")
+	// test db_file should not exist after DeleteDb
+	DB.DeleteDb()
+	_, err = os.Stat(test_db_path)
+	if err == nil {
+		t.Fatal("TestCommit_DeleteDb: db_file should not exist")
 	}
 }

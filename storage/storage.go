@@ -1,8 +1,8 @@
 package storage
 
 type UpdateDesc struct {
-	field string
-	value any
+	Field string
+	Value any
 }
 
 // Every table or collection must implement the Storage interface
