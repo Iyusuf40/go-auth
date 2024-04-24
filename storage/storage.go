@@ -13,10 +13,11 @@ type Storage[T any] interface {
 	Delete(id string) bool
 	GetByField(data any) []T
 	GetAll() []T
+	BuildSelf(obj any) T
 }
 
 // for every transaction these processes
-//		connection to db
-//		assumption of transaction to be for particular table
+//		receive connection to db
+//		setup transaction to be for particular table
 //		operations
 //			create common executions

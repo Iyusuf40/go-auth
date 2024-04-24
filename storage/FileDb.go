@@ -16,19 +16,23 @@ type FileDb struct {
 
 func (db *FileDb) New(db_path string) (*FileDb, error) {
 	db.path = db_path
+	err := db.Reload()
+	return db, err
+}
+
+func (db *FileDb) Reload() error {
 	db.inMemoryStore = make(map[string]any)
-	content, err := os.ReadFile(db.path)
+	content, _ := os.ReadFile(db.path)
 
-	if err != nil { // file doesnt exist
-		return db, nil
-	}
-
-	err = json.Unmarshal(content, &(db.inMemoryStore))
+	err := json.Unmarshal(content, &(db.inMemoryStore))
 	if err != nil {
-		return nil, err
+		return nil
 	}
+	return nil
+}
 
-	return db, nil
+func (db *FileDb) AllRecordsCount() int {
+	return len(db.inMemoryStore)
 }
 
 func (db *FileDb) Save(obj any) (string, error) {
