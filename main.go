@@ -1,11 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func main() {
-	var x any = map[string]any{"a": 1}
+	var x = 23
+	var y int = 23
 
-	if obj, ok := x.(map[string]any); ok {
-		fmt.Println(obj["a"], "again")
+	if x == y {
+		fmt.Println("yes")
 	}
 }

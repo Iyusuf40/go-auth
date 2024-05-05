@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"reflect"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -52,14 +53,52 @@ func (db *FileDb) Save(obj any) (string, error) {
 	return id, nil
 }
 
-// returns objects with any type so users can build
-// objects using type assertions
+// returns objects with any type so users can rebuild
+// objects with their type builders
 func (db *FileDb) Get(id string) (any, error) {
 	stored, found := db.inMemoryStore[id]
 	if found {
 		return stored, nil
 	}
 	return nil, errors.New("FileDb: Get: failed to get object with id: " + id)
+}
+
+func (db *FileDb) GetRecordsByField(objTypeName, field string, value any) ([]any, error) {
+	if objTypeName == "" {
+		return nil, errors.New("FileDb: GetRecordsByField: no records found for " + objTypeName)
+	}
+
+	var listOfRecordsOfSameType []map[string]any
+
+	for key, val := range db.inMemoryStore {
+		if strings.HasPrefix(key, objTypeName) {
+			concVal, ok := val.(map[string]any)
+			if !ok {
+				return nil, errors.New(`FileDb: GetRecordsByField: records found for is not of  
+					map[string]any type` + objTypeName)
+			}
+			listOfRecordsOfSameType = append(listOfRecordsOfSameType, concVal)
+		}
+	}
+
+	var listOfMatchedRecords []any
+	var compValue any
+
+	// convert value number to float64 if value is a number
+	numberVal, ok := getFloat64Equivalent(value)
+	if ok {
+		compValue = numberVal
+	} else {
+		compValue = value
+	}
+
+	for _, record := range listOfRecordsOfSameType {
+		if record[field] == compValue {
+			listOfMatchedRecords = append(listOfMatchedRecords, record)
+		}
+	}
+
+	return listOfMatchedRecords, nil
 }
 
 func (db *FileDb) Delete(id string) {
@@ -97,6 +136,38 @@ func (db *FileDb) Commit() error {
 func (db *FileDb) DeleteDb() error {
 	err = os.Remove(db.path)
 	return err
+}
+
+func getFloat64Equivalent(value any) (float64, bool) {
+	if concVal, ok := value.(int); ok {
+		return float64(concVal), true
+	}
+
+	if concVal, ok := value.(int8); ok {
+		return float64(concVal), true
+	}
+
+	if concVal, ok := value.(int16); ok {
+		return float64(concVal), true
+	}
+
+	if concVal, ok := value.(int32); ok {
+		return float64(concVal), true
+	}
+
+	if concVal, ok := value.(int64); ok {
+		return float64(concVal), true
+	}
+
+	if concVal, ok := value.(float32); ok {
+		return float64(concVal), true
+	}
+
+	if concVal, ok := value.(float64); ok {
+		return float64(concVal), true
+	}
+
+	return 0, false
 }
 
 var Db, err = new(FileDb).New("db.json")

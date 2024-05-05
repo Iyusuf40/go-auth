@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -91,6 +92,61 @@ func TestSaveAndGet(t *testing.T) {
 	}
 }
 
+func TestGetRecordsByField(t *testing.T) {
+
+	beforeEach()
+	defer afterEach()
+
+	user := User{"user", 20}
+	DB.Save(user)
+	var age float32 = 20
+
+	records, err := DB.GetRecordsByField("User", "age", age)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(records) != 1 {
+		t.Fatal("TestGetRecordsByField: length of records returned should be 1",
+			"got", len(records))
+	}
+
+	nonExistentAge := 10
+	records, err = DB.GetRecordsByField("User", "age", nonExistentAge)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(records) != 0 {
+		t.Fatal("TestGetRecordsByField: length of records returned should be 0",
+			"got", len(records))
+	}
+
+	records, err = DB.GetRecordsByField("User", "name", "user")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(records) != 1 {
+		t.Fatal("TestGetRecordsByField: length of records returned should be 1",
+			"got", len(records))
+	}
+
+	records, err = DB.GetRecordsByField("NoRecord", "age", nonExistentAge)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(records) != 0 {
+		t.Fatal("TestGetRecordsByField: length of records returned should be 0",
+			"got", len(records))
+	}
+}
+
 func TestUpdate(t *testing.T) {
 
 	beforeEach()
@@ -153,6 +209,26 @@ func TestDelete(t *testing.T) {
 
 	if DB.AllRecordsCount() != 0 {
 		t.Fatal("TestReload: records in inMemoryStore should be 0")
+	}
+}
+
+func TestAllRecordsCount(t *testing.T) {
+
+	beforeEach()
+	defer afterEach()
+
+	if DB.AllRecordsCount() != 0 {
+		t.Fatal("TestAllRecordsCount: records in inMemoryStore should be 0")
+	}
+
+	noToSave := 10
+	user := User{"test", 20}
+
+	for i := 1; i <= noToSave; i++ {
+		DB.Save(user)
+		if DB.AllRecordsCount() != i {
+			t.Fatal("TestAllRecordsCount: records in inMemoryStore should be " + fmt.Sprint(i))
+		}
 	}
 }
 
