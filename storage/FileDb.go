@@ -11,12 +11,14 @@ import (
 )
 
 type FileDb struct {
-	path          string
-	inMemoryStore map[string]any
+	path                   string
+	inMemoryStore          map[string]any
+	OBJ_TYPE_KEY_SEPARATOR string
 }
 
 func (db *FileDb) New(db_path string) (*FileDb, error) {
 	db.path = db_path
+	db.OBJ_TYPE_KEY_SEPARATOR = "-"
 	err := db.Reload()
 	return db, err
 }
@@ -38,7 +40,7 @@ func (db *FileDb) AllRecordsCount() int {
 
 func (db *FileDb) Save(obj any) (string, error) {
 	uid := uuid.NewString()
-	id := reflect.TypeOf(obj).Name() + "-" + uid
+	id := reflect.TypeOf(obj).Name() + db.OBJ_TYPE_KEY_SEPARATOR + uid
 	json_rep, err := json.Marshal(obj) // test if it can be jsoned
 	if err != nil {
 		return "", err

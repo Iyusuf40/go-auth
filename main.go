@@ -5,10 +5,16 @@ import (
 )
 
 func main() {
-	var x = 23
-	var y int = 23
+	var x = map[string]string{"a": "abc"}
 
-	if x == y {
-		fmt.Println("yes")
-	}
+	y := c(x)
+
+	y["a"] = "xyz"
+
+	fmt.Printf("%p %p", &x, &y)
+	fmt.Println(x, y)
+}
+
+func c(x map[string]string) map[string]string {
+	return x
 }
