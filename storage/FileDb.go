@@ -29,7 +29,7 @@ func (db *FileDb) Reload() error {
 
 	err := json.Unmarshal(content, &(db.inMemoryStore))
 	if err != nil {
-		return nil
+		return err
 	}
 	return nil
 }

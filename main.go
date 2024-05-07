@@ -2,19 +2,11 @@ package main
 
 import (
 	"fmt"
+	"time"
 )
 
 func main() {
-	var x = map[string]string{"a": "abc"}
-
-	y := c(x)
-
-	y["a"] = "xyz"
-
-	fmt.Printf("%p %p", &x, &y)
-	fmt.Println(x, y)
-}
-
-func c(x map[string]string) map[string]string {
-	return x
+	t1 := time.Now().Unix()
+	t2 := time.Now().Add(time.Duration(10) * time.Second).Unix()
+	fmt.Println(t2 - t1)
 }

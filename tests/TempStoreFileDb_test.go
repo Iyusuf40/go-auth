@@ -3,6 +3,7 @@ package tests
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/Iyusuf40/go-auth/storage"
 )
@@ -23,6 +24,7 @@ func TestSetKeyToValAndGetVal(t *testing.T) {
 	defer afterEachTSF()
 
 	key := "key"
+	TS.DelKey(key)
 	got := TS.GetVal(key)
 	if got != "" {
 		t.Fatal("TestSetKeyToValAndGetVal: expected value to be empty")
@@ -44,7 +46,7 @@ func TestDelKey(t *testing.T) {
 	beforeEachTSF()
 	defer afterEachTSF()
 
-	key := "key"
+	key := "key2"
 	val := "value"
 
 	ok := TS.SetKeyToVal(key, val)
@@ -66,5 +68,80 @@ func TestDelKey(t *testing.T) {
 	// key does not exists
 	if got != "" {
 		t.Fatal("TestDelKey: expected value to be empty")
+	}
+}
+
+func TestSetKeyToValWithExpiry(t *testing.T) {
+	beforeEachTSF()
+	defer afterEachTSF()
+
+	key := "key3"
+	TS.DelKey(key)
+	got := TS.GetVal(key)
+	if got != "" {
+		t.Fatal("TestSetKeyToValAndGetVal: expected value to be empty")
+	}
+
+	val := "value"
+	expiry := 2
+
+	ok := TS.SetKeyToValWIthExpiry(key, val, expiry)
+	if !ok {
+		t.Fatal("TestSetKeyToValWIthExpiry: failed to set value")
+	}
+
+	got = TS.GetVal(key)
+	if got != val {
+		t.Fatal("TestSetKeyToValWIthExpiry: expected value to be " + val + " got " + got)
+	}
+
+	// value should still exists after half duration
+	time.Sleep(time.Second * time.Duration(expiry/2))
+	got = TS.GetVal(key)
+	if got != val {
+		t.Fatal("TestSetKeyToValWIthExpiry: expected value to be " + val + " got " + got)
+	}
+
+	// value should not exist after half duration
+	time.Sleep(time.Second * time.Duration(expiry/2))
+	got = TS.GetVal(key)
+	if got != "" {
+		t.Fatal("TestSetKeyToValWIthExpiry: expected value to be empty, got " + got)
+	}
+}
+
+func TestChangeKeyExpiry(t *testing.T) {
+	beforeEachTSF()
+	defer afterEachTSF()
+
+	key := "key4"
+	TS.DelKey(key)
+	got := TS.GetVal(key)
+	if got != "" {
+		t.Fatal("TestSetKeyToValAndGetVal: expected value to be empty")
+	}
+
+	val := "value"
+	expiry := 2
+
+	ok := TS.SetKeyToValWIthExpiry(key, val, expiry)
+	if !ok {
+		t.Fatal("TestSetKeyToValWIthExpiry: failed to set value")
+	}
+
+	got = TS.GetVal(key)
+	if got != val {
+		t.Fatal("TestSetKeyToValWIthExpiry: expected value to be " + val + " got " + got)
+	}
+
+	// shorten the expiry
+	TS.ChangeKeyEpiry(key, expiry/2)
+
+	// value should not exist after half duration, since
+	// it has been shortened
+	time.Sleep(time.Second * time.Duration(expiry/2))
+	got = TS.GetVal(key)
+	if got != "" {
+		t.Fatal("TestSetKeyToValWIthExpiry: expected value to be empty, got " + got)
 	}
 }
