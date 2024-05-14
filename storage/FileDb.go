@@ -177,3 +177,5 @@ var Db, err = new(FileDb).New("db.json")
 func MakeFileDb(db_path string) (*FileDb, error) {
 	return new(FileDb).New(db_path)
 }
+
+var GLOBAL_FILE_DB, _ = MakeFileDb("file_db")
