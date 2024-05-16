@@ -65,25 +65,14 @@ func (db *FileDb) Get(id string) (any, error) {
 	return nil, errors.New("FileDb: Get: failed to get object with id: " + id)
 }
 
-func (db *FileDb) GetRecordsByField(objTypeName, field string, value any) ([]any, error) {
+func (db *FileDb) GetRecordsByField(objTypeName, field string, value any) ([]map[string]any, error) {
 	if objTypeName == "" {
 		return nil, errors.New("FileDb: GetRecordsByField: no records found for " + objTypeName)
 	}
 
-	var listOfRecordsOfSameType []map[string]any
+	var listOfRecordsOfSameType = db.GetAllOfType(objTypeName)
 
-	for key, val := range db.inMemoryStore {
-		if strings.HasPrefix(key, objTypeName) {
-			concVal, ok := val.(map[string]any)
-			if !ok {
-				return nil, errors.New(`FileDb: GetRecordsByField: records found for is not of  
-					map[string]any type` + objTypeName)
-			}
-			listOfRecordsOfSameType = append(listOfRecordsOfSameType, concVal)
-		}
-	}
-
-	var listOfMatchedRecords []any
+	var listOfMatchedRecords []map[string]any
 	var compValue any
 
 	// convert value number to float64 if value is a number
@@ -101,6 +90,23 @@ func (db *FileDb) GetRecordsByField(objTypeName, field string, value any) ([]any
 	}
 
 	return listOfMatchedRecords, nil
+}
+
+func (db *FileDb) GetAllOfType(objTypeName string) []map[string]any {
+	var listOfRecordsOfSameType []map[string]any
+
+	for key, val := range db.inMemoryStore {
+		if strings.HasPrefix(key, objTypeName) {
+			concVal, ok := val.(map[string]any)
+			if !ok {
+				panic(`FileDb: GetRecordsByField: records found for is not of  
+					map[string]any type` + objTypeName)
+			}
+			listOfRecordsOfSameType = append(listOfRecordsOfSameType, concVal)
+		}
+	}
+
+	return listOfRecordsOfSameType
 }
 
 func (db *FileDb) Delete(id string) {
@@ -178,4 +184,4 @@ func MakeFileDb(db_path string) (*FileDb, error) {
 	return new(FileDb).New(db_path)
 }
 
-var GLOBAL_FILE_DB, _ = MakeFileDb("file_db")
+var GLOBAL_FILE_DB, _ = MakeFileDb("file_db.json")

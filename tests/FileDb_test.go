@@ -29,18 +29,18 @@ func (u *User) buildUser(obj any) *User {
 var test_db_path = "test_db.json"
 var DB *storage.FileDb
 
-func beforeEach() {
+func beforeEachFDBT() {
 	DB, _ = storage.MakeFileDb(test_db_path)
 }
 
-func afterEach() {
+func afterEachFDBT() {
 	DB.DeleteDb()
 }
 
 func TestSaveAndGet(t *testing.T) {
 
-	beforeEach()
-	defer afterEach()
+	beforeEachFDBT()
+	defer afterEachFDBT()
 
 	user := User{"test user", 20}
 	if id, err := DB.Save(user); err == nil {
@@ -94,8 +94,8 @@ func TestSaveAndGet(t *testing.T) {
 
 func TestGetRecordsByField(t *testing.T) {
 
-	beforeEach()
-	defer afterEach()
+	beforeEachFDBT()
+	defer afterEachFDBT()
 
 	user := User{"user", 20}
 	DB.Save(user)
@@ -147,10 +147,27 @@ func TestGetRecordsByField(t *testing.T) {
 	}
 }
 
+func TestGetAllOfType(t *testing.T) {
+	beforeEachFDBT()
+	defer afterEachFDBT()
+
+	user := User{"user", 20}
+	noOfSaves := 5
+
+	for i := 0; i < noOfSaves; i++ {
+		DB.Save(user)
+	}
+	allSavedUsers := DB.GetAllOfType("User")
+
+	if len(allSavedUsers) != noOfSaves {
+		t.Fatal("TestGetRecordsByField: length of records returned should be", noOfSaves)
+	}
+}
+
 func TestUpdate(t *testing.T) {
 
-	beforeEach()
-	defer afterEach()
+	beforeEachFDBT()
+	defer afterEachFDBT()
 
 	user := User{"test", 20}
 	id, _ := DB.Save(user)
@@ -195,8 +212,8 @@ func TestUpdate(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 
-	beforeEach()
-	defer afterEach()
+	beforeEachFDBT()
+	defer afterEachFDBT()
 
 	user := User{"test", 20}
 	id, _ := DB.Save(user)
@@ -214,8 +231,8 @@ func TestDelete(t *testing.T) {
 
 func TestAllRecordsCount(t *testing.T) {
 
-	beforeEach()
-	defer afterEach()
+	beforeEachFDBT()
+	defer afterEachFDBT()
 
 	if DB.AllRecordsCount() != 0 {
 		t.Fatal("TestAllRecordsCount: records in inMemoryStore should be 0")
@@ -234,8 +251,8 @@ func TestAllRecordsCount(t *testing.T) {
 
 func TestReload(t *testing.T) {
 
-	beforeEach()
-	defer afterEach()
+	beforeEachFDBT()
+	defer afterEachFDBT()
 
 	zero := 0
 	// nothing in inMemoryStore
@@ -278,8 +295,8 @@ func TestReload(t *testing.T) {
 
 func TestCommit_DeleteDb(t *testing.T) {
 
-	beforeEach()
-	defer afterEach()
+	beforeEachFDBT()
+	defer afterEachFDBT()
 
 	// test db_file does not exist
 	_, err := os.Stat(test_db_path)

@@ -6,16 +6,6 @@ import (
 	"github.com/Iyusuf40/go-auth/models"
 )
 
-// type Storage[T any] interface {
-// 	Get(id string) T
-// 	Create(data T) string
-// 	Update(id string, data UpdateDesc) bool
-// 	Delete(id string) bool
-// 	GetByField(data any) []T
-// 	GetAll() []T
-// 	BuildSelf(obj any) T
-// }
-
 type UserStorage struct {
 	DB DB_Engine
 }
@@ -26,51 +16,102 @@ func (us *UserStorage) Get(id string) (models.User, error) {
 		fmt.Println(err)
 		return models.User{}, err
 	}
-	obj := us.BuildSelf(val)
+	obj := us.BuildClient(val)
 	return obj, nil
 }
 
-func (us *UserStorage) Save(data models.User) string {
-	if us.userWithEmailExist(data.Email) {
-		return ""
+func (us *UserStorage) Save(user models.User) (msg string, success bool) {
+	if !us.isValidUser(user) {
+		success = false
+		msg = "invalid user"
+		return msg, success
 	}
-	id, _ := us.DB.Save(data)
+
+	if us.userWithEmailExist(user.Email) {
+		success = false
+		msg = fmt.Sprintf("user with email %s exists", user.Email)
+		return msg, success
+	}
+	id, err := us.DB.Save(user)
+	if err != nil {
+		success = false
+		msg = err.Error()
+		return msg, success
+	}
 	us.DB.Commit()
-	return id
+	success = true
+	msg = id
+	return msg, success
 }
 
-func (us *UserStorage) BuildSelf(obj any) models.User {
+func (us *UserStorage) Update(id string, data UpdateDesc) bool {
+	res := us.DB.Update(id, data)
+	us.DB.Commit()
+	return res
+}
+
+func (us *UserStorage) Delete(id string) {
+	us.DB.Delete(id)
+	us.DB.Commit()
+}
+
+func (us *UserStorage) GetByField(field string, value any) []models.User {
+	var users []models.User
+	var retrievedUsers []map[string]any
+	retrievedUsers, _ = us.DB.GetRecordsByField("User", field, value)
+	users = us.buildManyUsers(retrievedUsers)
+	return users
+}
+
+func (us *UserStorage) GetAll() []models.User {
+	var users []models.User
+	retrievedUsers := us.DB.GetAllOfType("User")
+	users = us.buildManyUsers(retrievedUsers)
+	return users
+}
+
+func (us *UserStorage) buildManyUsers(retrievedUsers []map[string]any) []models.User {
+	var users []models.User
+
+	for _, userDesc := range retrievedUsers {
+		user := us.BuildClient(userDesc)
+		users = append(users, user)
+	}
+
+	return users
+}
+
+func (us *UserStorage) BuildClient(obj any) models.User {
+
+	// after recovery, zero value of enclosing function
+	// will be returned
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("UserStorage.BuildClient:", r)
+		}
+	}()
+
 	user := models.User{}
 	if map_rep, ok := obj.(map[string]any); ok {
 		user.FirstName = map_rep["firstName"].(string)
 		user.LastName = map_rep["lastName"].(string)
 		user.Email = map_rep["email"].(string)
-		user.Phone = int(map_rep["phone"].(float64))
+		phoneFloatVal, _ := getFloat64Equivalent(map_rep["phone"])
+		user.Phone = int(phoneFloatVal)
 	}
 	return user
-}
-
-func (us *UserStorage) Update(id string, data UpdateDesc) bool {
-	return false
-}
-
-func (us *UserStorage) Delete(id string) bool {
-	return false
-}
-
-func (us *UserStorage) GetByField(data any) []models.User {
-	var res []models.User
-	return res
-}
-
-func (us *UserStorage) GetAll() []models.User {
-	var res []models.User
-	return res
 }
 
 func (us *UserStorage) userWithEmailExist(email string) bool {
 	queryRes, _ := us.DB.GetRecordsByField("User", "email", email)
 	return len(queryRes) > 0
+}
+
+func (us *UserStorage) isValidUser(user models.User) bool {
+	if user.Email == "" || user.FirstName == "" || user.LastName == "" || user.Phone == 0 {
+		return false
+	}
+	return true
 }
 
 func MakeUserStorage(db_path string) Storage[models.User] {

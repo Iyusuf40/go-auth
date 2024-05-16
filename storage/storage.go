@@ -8,12 +8,12 @@ type UpdateDesc struct {
 // Every table or collection must implement the Storage interface
 type Storage[T any] interface {
 	Get(id string) (T, error)
-	Save(data T) string
+	Save(data T) (msg string, success bool)
 	Update(id string, data UpdateDesc) bool
-	Delete(id string) bool
-	GetByField(data any) []T
+	Delete(id string)
+	GetByField(field string, value any) []T
 	GetAll() []T
-	BuildSelf(obj any) T
+	BuildClient(obj any) T
 }
 
 type DB_Engine interface {
@@ -23,7 +23,8 @@ type DB_Engine interface {
 	Delete(id string)
 	// if FileDb is the Engine, field is the json tag if it
 	// is defined on the obj
-	GetRecordsByField(objTypeName, field string, value any) ([]any, error)
+	GetRecordsByField(objTypeName, field string, value any) ([]map[string]any, error)
+	GetAllOfType(objTypeName string) []map[string]any
 	Commit() error
 }
 

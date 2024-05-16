@@ -152,7 +152,7 @@ func (TS *TempStoreFileDbImpl) getMapStore() map[string]any {
 		panic(`TempStoreFileDbImpl: getMapStore: there should only be one 
 			instance in existence`)
 	}
-	mapStore := mapStoreList[0].(map[string]any)["MapStore"].(map[string]any)
+	mapStore := mapStoreList[0]["MapStore"].(map[string]any)
 	return mapStore
 }
 
@@ -167,7 +167,7 @@ func (TS *TempStoreFileDbImpl) getTimerMap() map[string]any {
 		panic(`TempStoreFileDbImpl: getTimerMap: there should only be one 
 			instance in existence`)
 	}
-	timerMap := mapStoreList[0].(map[string]any)["TimerMap"].(map[string]any)
+	timerMap := mapStoreList[0]["TimerMap"].(map[string]any)
 	return timerMap
 }
 
