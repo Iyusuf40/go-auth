@@ -19,6 +19,11 @@ type Storage[T any] interface {
 type DB_Engine interface {
 	Get(id string) (any, error)
 	Save(data any) (string, error)
+	// for document stores using noSql, Callers of this function
+	// must validate both fields passed in data else, unwanted fields
+	// may be added to the records on disc and values of
+	// an inappropriate type might be added, causing errors in
+	// rebuilding objects
 	Update(id string, data UpdateDesc) bool
 	Delete(id string)
 	// if FileDb is the Engine, field is the json tag if it

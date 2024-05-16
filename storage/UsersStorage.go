@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/Iyusuf40/go-auth/models"
@@ -45,6 +46,16 @@ func (us *UserStorage) Save(user models.User) (msg string, success bool) {
 }
 
 func (us *UserStorage) Update(id string, data UpdateDesc) bool {
+	field := data.Field
+
+	// check if field exists on User struct
+	exists := fieldExistsOnUser(field)
+	canRebuild := us.userIsRebuildableWithNewData(id, field, data.Value)
+
+	if !exists || !canRebuild {
+		return false
+	}
+
 	res := us.DB.Update(id, data)
 	us.DB.Commit()
 	return res
@@ -112,6 +123,47 @@ func (us *UserStorage) isValidUser(user models.User) bool {
 		return false
 	}
 	return true
+}
+
+// try to rebuild user with updated data and return
+// true if possible else return false
+func (us *UserStorage) userIsRebuildableWithNewData(id, field string, value any) bool {
+	prevDesc, err := us.DB.Get(id)
+	if err != nil {
+		return false
+	}
+	if concDesc, ok := prevDesc.(map[string]any); ok {
+		var copyUserDesc = map[string]any{}
+		// copy concDesc
+		for key, value := range concDesc {
+			copyUserDesc[key] = value
+		}
+		copyUserDesc[field] = value
+		user := us.BuildClient(copyUserDesc)
+		return us.isValidUser(user)
+	}
+	return false
+}
+
+func fieldExistsOnUser(field string) bool {
+	// map rep of user was used because of json reps of
+	// User struct has it fields having json tagged keys
+	// and requests come in using this lower cased keys
+	// which do not match with the Capitalised exported
+	// struct keys otherwise an approach similar to
+	//
+	// _, exists := reflect.TypeOf(User{}).FieldByName(field)
+	//
+	// would have been used
+	_, exists := getMapRepOfUser()[field]
+	return exists
+}
+
+func getMapRepOfUser() map[string]any {
+	var mapRep map[string]any
+	jsonBytes, _ := json.Marshal(models.User{})
+	json.Unmarshal(jsonBytes, &mapRep)
+	return mapRep
 }
 
 func MakeUserStorage(db_path string) Storage[models.User] {

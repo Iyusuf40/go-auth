@@ -9,7 +9,12 @@ import (
 func Serve() {
 	e := echo.New()
 	e.Use(middleware.Recover())
+
 	g := e.Group("/api")
 	g.POST("/users", controllers.SaveUser)
+	g.GET("/users/:id", controllers.GetUser)
+	g.PUT("/users/:id", controllers.UpdateUser)
+	g.DELETE("/users/:id", controllers.DeleteUser)
+
 	e.Logger.Fatal(e.Start(":8080"))
 }
