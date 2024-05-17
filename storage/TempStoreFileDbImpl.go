@@ -59,7 +59,7 @@ func (TS *TempStoreFileDbImpl) SetKeyToVal(key string, value string) bool {
 }
 
 // expiry is in seconds
-func (TS *TempStoreFileDbImpl) setKeyToExpiry(key string, expiry int) bool {
+func (TS *TempStoreFileDbImpl) setKeyToExpiry(key string, expiry float64) bool {
 	timerStore := TS.getTimerMap()
 	expiryTime := time.Now().Add(time.Second * time.Duration(expiry)).Unix()
 	timerStore[key] = float64(expiryTime)
@@ -69,13 +69,13 @@ func (TS *TempStoreFileDbImpl) setKeyToExpiry(key string, expiry int) bool {
 
 // sets key to val in MapSTore
 // sets key to expiry in TimerMap
-func (TS *TempStoreFileDbImpl) SetKeyToValWIthExpiry(key string, value string, expiry int) bool {
+func (TS *TempStoreFileDbImpl) SetKeyToValWIthExpiry(key string, value string, expiry float64) bool {
 	TS.setKeyToExpiry(key, expiry)
 	TS.SetKeyToVal(key, value)
 	return true
 }
 
-func (TS *TempStoreFileDbImpl) ChangeKeyEpiry(key string, newExpiry int) bool {
+func (TS *TempStoreFileDbImpl) ChangeKeyEpiry(key string, newExpiry float64) bool {
 	TS.setKeyToExpiry(key, newExpiry)
 	return true
 }

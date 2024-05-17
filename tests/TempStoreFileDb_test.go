@@ -83,7 +83,7 @@ func TestSetKeyToValWithExpiry(t *testing.T) {
 	}
 
 	val := "value"
-	expiry := 2
+	expiry := 1.5
 
 	ok := TS.SetKeyToValWIthExpiry(key, val, expiry)
 	if !ok {
@@ -102,8 +102,8 @@ func TestSetKeyToValWithExpiry(t *testing.T) {
 		t.Fatal("TestSetKeyToValWIthExpiry: expected value to be " + val + " got " + got)
 	}
 
-	// value should not exist after half duration
-	time.Sleep(time.Second * time.Duration(expiry/2))
+	// value should not exist after duration
+	time.Sleep(time.Second * time.Duration(int(expiry)))
 	got = TS.GetVal(key)
 	if got != "" {
 		t.Fatal("TestSetKeyToValWIthExpiry: expected value to be empty, got " + got)
@@ -122,7 +122,7 @@ func TestChangeKeyExpiry(t *testing.T) {
 	}
 
 	val := "value"
-	expiry := 2
+	expiry := 1.5
 
 	ok := TS.SetKeyToValWIthExpiry(key, val, expiry)
 	if !ok {

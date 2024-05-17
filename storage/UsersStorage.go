@@ -50,7 +50,7 @@ func (us *UserStorage) Update(id string, data UpdateDesc) bool {
 
 	// check if field exists on User struct
 	exists := fieldExistsOnUser(field)
-	canRebuild := us.userIsRebuildableWithNewData(id, field, data.Value)
+	canRebuild := us.userIsRebuildableWithUpdatedData(id, field, data.Value)
 
 	if !exists || !canRebuild {
 		return false
@@ -127,7 +127,7 @@ func (us *UserStorage) isValidUser(user models.User) bool {
 
 // try to rebuild user with updated data and return
 // true if possible else return false
-func (us *UserStorage) userIsRebuildableWithNewData(id, field string, value any) bool {
+func (us *UserStorage) userIsRebuildableWithUpdatedData(id, field string, value any) bool {
 	prevDesc, err := us.DB.Get(id)
 	if err != nil {
 		return false

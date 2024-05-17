@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var userStorage = storage.MakeUserStorage("")
+var UserStorage = storage.MakeUserStorage("")
 
 func SaveUser(c echo.Context) error {
 	body := getBodyInMap(c)
@@ -20,8 +20,8 @@ func SaveUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, response)
 	}
 
-	user := userStorage.BuildClient(userDesc)
-	msg, success := userStorage.Save(user)
+	user := UserStorage.BuildClient(userDesc)
+	msg, success := UserStorage.Save(user)
 
 	if !success {
 		response["error"] = msg
@@ -34,7 +34,7 @@ func SaveUser(c echo.Context) error {
 
 func GetUser(c echo.Context) error {
 	userId := c.Param("id")
-	user, err := userStorage.Get(userId)
+	user, err := UserStorage.Get(userId)
 	response := map[string]string{}
 	if err != nil {
 		response["error"] = "user with id " + userId + " doesn't exist"
@@ -63,7 +63,7 @@ func UpdateUser(c echo.Context) error {
 
 	userId := c.Param("id")
 
-	updated := userStorage.Update(userId, storage.UpdateDesc{Field: field,
+	updated := UserStorage.Update(userId, storage.UpdateDesc{Field: field,
 		Value: value})
 
 	if !updated {
@@ -79,6 +79,6 @@ func DeleteUser(c echo.Context) error {
 	userId := c.Param("id")
 	response := map[string]string{"message": "deleted"}
 
-	userStorage.Delete(userId)
+	UserStorage.Delete(userId)
 	return c.JSON(http.StatusOK, response)
 }
