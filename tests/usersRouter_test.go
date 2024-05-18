@@ -24,7 +24,7 @@ func afterEachUAPIT() {
 	os.Remove(users_api_test_db_path)
 }
 
-func TestCreateUser(t *testing.T) {
+func TestPOSTUser(t *testing.T) {
 	// Setup
 	beforeEachUAPIT()
 	defer afterEachUAPIT()
@@ -64,7 +64,7 @@ func TestCreateUser(t *testing.T) {
 	}
 }
 
-func TestGetUser(t *testing.T) {
+func TestGETUser(t *testing.T) {
 	// Setup
 	beforeEachUAPIT()
 	defer afterEachUAPIT()
@@ -101,6 +101,95 @@ func TestGetUser(t *testing.T) {
 	if http.StatusNotFound != rec.Code {
 		fmt.Println("body returned", rec.Body.String())
 		t.Fatal("GET /api/users/:id : expected:", http.StatusNotFound, "got:", rec.Code)
+	}
+}
+
+func TestPUTUser(t *testing.T) {
+	// Setup
+	beforeEachUAPIT()
+	defer afterEachUAPIT()
+
+	user := models.User{Email: "testmail@mail.com",
+		FirstName: "fname",
+		LastName:  "lname",
+		Phone:     999,
+	}
+
+	id, saved := controllers.UserStorage.Save(user)
+
+	if !saved {
+		t.Fatal("PUT /api/user/:id: expected: true got:", saved)
+	}
+
+	newPhone := 99
+	upadateJSON := fmt.Sprintf(`{"data": {"field":"phone", "value": %d}}`, newPhone)
+
+	// test successfully saving a user
+	headers := map[string]string{
+		echo.HeaderContentType: echo.MIMEApplicationJSON,
+	}
+
+	e := echo.New()
+	rec, c := SetupRequest(e, http.MethodPut, "/api/users/:id", upadateJSON, headers)
+	c.SetParamNames("id")
+	c.SetParamValues(id)
+
+	controllers.UpdateUser(c)
+
+	if rec.Code != http.StatusOK {
+		fmt.Println("body returned", rec.Body.String())
+		t.Fatal("PUT /api/users/:id : expected:", http.StatusOK, "got:", rec.Code)
+	}
+
+	upadatedUser, _ := controllers.UserStorage.Get(id)
+
+	if upadatedUser.Phone != newPhone {
+		t.Fatal("PUT /api/users/:id : expected retrieved user.Phone:", newPhone,
+			"got:", upadatedUser.Phone)
+	}
+}
+
+func TestDELETEUser(t *testing.T) {
+	// Setup
+	beforeEachUAPIT()
+	defer afterEachUAPIT()
+
+	user := models.User{Email: "testmail@mail.com",
+		FirstName: "fname",
+		LastName:  "lname",
+		Phone:     999,
+	}
+
+	id, saved := controllers.UserStorage.Save(user)
+
+	if !saved {
+		t.Fatal("DELETE /api/user/:id: expected: true got:", saved)
+	}
+
+	// attempt to get user
+	_, err := controllers.UserStorage.Get(id)
+
+	if err != nil {
+		t.Fatal("DELETE /api/user/:id: expected error to be nil got:", err)
+	}
+
+	e := echo.New()
+	rec, c := SetupRequest(e, http.MethodPut, "/api/users/:id", "", nil)
+	c.SetParamNames("id")
+	c.SetParamValues(id)
+
+	controllers.DeleteUser(c)
+
+	if rec.Code != http.StatusOK {
+		fmt.Println("body returned", rec.Body.String())
+		t.Fatal("DELETE /api/users/:id : expected:", http.StatusOK, "got:", rec.Code)
+	}
+
+	// attempt to get deleted user
+	_, err = controllers.UserStorage.Get(id)
+
+	if err == nil {
+		t.Fatal("DELETE /api/user/:id: expected error to be non-nil got:", err)
 	}
 }
 
