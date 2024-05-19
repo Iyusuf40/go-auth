@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
+	"github.com/Iyusuf40/go-auth/models"
 	"github.com/Iyusuf40/go-auth/storage"
 	"github.com/labstack/echo/v4"
 )
@@ -40,7 +42,8 @@ func GetUser(c echo.Context) error {
 		response["error"] = "user with id " + userId + " doesn't exist"
 		return c.JSON(http.StatusNotFound, response)
 	}
-	return c.JSON(http.StatusOK, user)
+
+	return c.JSON(http.StatusOK, getUserMapWithoutPassword(user))
 }
 
 func UpdateUser(c echo.Context) error {
@@ -81,4 +84,12 @@ func DeleteUser(c echo.Context) error {
 
 	UserStorage.Delete(userId)
 	return c.JSON(http.StatusOK, response)
+}
+
+func getUserMapWithoutPassword(user models.User) map[string]any {
+	userJSON, _ := json.Marshal(user)
+	userMapRep := map[string]any{}
+	json.Unmarshal(userJSON, &userMapRep)
+	delete(userMapRep, "password")
+	return userMapRep
 }

@@ -2,7 +2,6 @@ package tests
 
 import (
 	"os"
-	"reflect"
 	"slices"
 	"testing"
 
@@ -30,6 +29,7 @@ func TestSaveAndGetUser(t *testing.T) {
 		FirstName: "f_name",
 		LastName:  "l_name",
 		Phone:     8000,
+		Password:  "xxx",
 	}
 
 	id, success := US.Save(user)
@@ -39,7 +39,7 @@ func TestSaveAndGetUser(t *testing.T) {
 
 	retrievedUser, _ := US.Get(id)
 
-	if reflect.DeepEqual(retrievedUser, user) == false {
+	if usersAreEqual(retrievedUser, user) == false {
 		t.Fatal("TestSaveAndGetUser: retrievedUser should be equal to saved")
 	}
 
@@ -58,6 +58,7 @@ func TestUpdateUser(t *testing.T) {
 		FirstName: "f_name",
 		LastName:  "l_name",
 		Phone:     8000,
+		Password:  "xxx",
 	}
 
 	updateField := "phone"
@@ -70,7 +71,7 @@ func TestUpdateUser(t *testing.T) {
 
 	retrievedUser, _ := US.Get(id)
 
-	if reflect.DeepEqual(retrievedUser, user) == false {
+	if usersAreEqual(retrievedUser, user) == false {
 		t.Fatal("TestUpdateUser: retrievedUser should be equal to saved")
 	}
 
@@ -92,6 +93,7 @@ func TestDeleteUser(t *testing.T) {
 		FirstName: "f_name",
 		LastName:  "l_name",
 		Phone:     8000,
+		Password:  "xxx",
 	}
 
 	id, success := US.Save(user)
@@ -101,14 +103,14 @@ func TestDeleteUser(t *testing.T) {
 
 	retrievedUser, _ := US.Get(id)
 
-	if reflect.DeepEqual(retrievedUser, user) == false {
+	if usersAreEqual(retrievedUser, user) == false {
 		t.Fatal("TestDeleteUser: retrievedUser should be equal to saved")
 	}
 
 	US.Delete(id)
 	retrievedUser, err := US.Get(id)
 
-	if reflect.DeepEqual(retrievedUser, models.User{}) != true {
+	if usersAreEqual(retrievedUser, models.User{}) != true {
 		t.Fatal("TestDeleteUser: retrievedUser should be empty")
 	}
 
@@ -127,6 +129,7 @@ func TestGetUserByField(t *testing.T) {
 		FirstName: "f_name",
 		LastName:  "l_name",
 		Phone:     8000,
+		Password:  "xxx",
 	}
 
 	_, success := US.Save(user)
@@ -136,8 +139,40 @@ func TestGetUserByField(t *testing.T) {
 
 	retrievedUser := US.GetByField("email", email)[0]
 
-	if reflect.DeepEqual(retrievedUser, user) == false {
+	if usersAreEqual(retrievedUser, user) == false {
 		t.Fatal("TestGetUserByField: retrievedUser should be equal to saved")
+	}
+}
+
+func TestGetUserIdByField(t *testing.T) {
+	beforeEachUST()
+	defer afterEachUST()
+
+	email := "mail@mail"
+	user := models.User{
+		Email:     email,
+		FirstName: "f_name",
+		LastName:  "l_name",
+		Phone:     8000,
+		Password:  "xxx",
+	}
+
+	id, success := US.Save(user)
+	if !success {
+		t.Fatal("TestGetUserIdByField: success should be true")
+	}
+
+	retrievedId := US.GetIdByField("email", email)
+
+	if retrievedId != id {
+		t.Fatal("TestGetUserIdByField: retrievedId should be same")
+	}
+
+	// get wrong field
+	retrievedId = US.GetIdByField("email", email+email)
+
+	if retrievedId != "" {
+		t.Fatal("TestGetUserIdByField: retrievedId should be empty")
 	}
 }
 
@@ -153,6 +188,7 @@ func TestGetAllUsers(t *testing.T) {
 			FirstName: "f_name",
 			LastName:  "l_name",
 			Phone:     8000,
+			Password:  "xxx",
 		}
 		_, success := US.Save(user)
 		if !success {
@@ -171,4 +207,14 @@ func TestGetAllUsers(t *testing.T) {
 			t.Fatal("TestGetAllUsers:", user.Email, "should be in", emails)
 		}
 	}
+}
+
+func usersAreEqual(u1 models.User, u2 models.User) bool {
+	if u1.Email != u2.Email ||
+		u1.FirstName != u2.FirstName ||
+		u1.LastName != u2.LastName ||
+		u1.Phone != u2.Phone {
+		return false
+	}
+	return true
 }

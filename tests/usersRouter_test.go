@@ -30,7 +30,8 @@ func TestPOSTUser(t *testing.T) {
 	defer afterEachUAPIT()
 
 	e := echo.New()
-	userJSON := `{"data": {"firstName":"John", "lastName": "Doe","email":"mail@mail.com", "phone": 90543434}}`
+	userJSON := `{"data": {"firstName":"John", "lastName": "Doe","email":"mail@mail.com", 
+	"password": "xx", "phone": 90543434}}`
 
 	// test successfully saving a user
 	headers := map[string]string{
@@ -73,6 +74,7 @@ func TestGETUser(t *testing.T) {
 		FirstName: "fname",
 		LastName:  "lname",
 		Phone:     999,
+		Password:  "xxx",
 	}
 
 	id, saved := controllers.UserStorage.Save(user)
@@ -113,6 +115,7 @@ func TestPUTUser(t *testing.T) {
 		FirstName: "fname",
 		LastName:  "lname",
 		Phone:     999,
+		Password:  "xxx",
 	}
 
 	id, saved := controllers.UserStorage.Save(user)
@@ -158,6 +161,7 @@ func TestDELETEUser(t *testing.T) {
 		FirstName: "fname",
 		LastName:  "lname",
 		Phone:     999,
+		Password:  "xxx",
 	}
 
 	id, saved := controllers.UserStorage.Save(user)

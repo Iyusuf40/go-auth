@@ -12,6 +12,7 @@ type Storage[T any] interface {
 	Update(id string, data UpdateDesc) bool
 	Delete(id string)
 	GetByField(field string, value any) []T
+	GetIdByField(field string, value any) string
 	GetAll() []T
 	BuildClient(obj any) T
 }
@@ -29,6 +30,7 @@ type DB_Engine interface {
 	// if FileDb is the Engine, field is the json tag if it
 	// is defined on the obj
 	GetRecordsByField(objTypeName, field string, value any) ([]map[string]any, error)
+	GetIdByFieldAndValue(objTypeName, field string, value any) string
 	GetAllOfType(objTypeName string) []map[string]any
 	Commit() error
 }

@@ -92,6 +92,29 @@ func (db *FileDb) GetRecordsByField(objTypeName, field string, value any) ([]map
 	return listOfMatchedRecords, nil
 }
 
+func (db *FileDb) GetIdByFieldAndValue(objTypeName, field string, value any) string {
+	for key, val := range db.inMemoryStore {
+		if strings.HasPrefix(key, objTypeName) {
+			concVal, ok := val.(map[string]any)
+			if !ok {
+				panic(`FileDb: GetRecordsByField: records found for is not of  
+					map[string]any type` + objTypeName)
+			}
+			if concVal[field] == value {
+				return key
+			}
+
+			if floatRep, ok := concVal[field].(float64); ok {
+				valueFloat, _ := getFloat64Equivalent(value)
+				if floatRep == valueFloat {
+					return key
+				}
+			}
+		}
+	}
+	return ""
+}
+
 func (db *FileDb) GetAllOfType(objTypeName string) []map[string]any {
 	var listOfRecordsOfSameType []map[string]any
 

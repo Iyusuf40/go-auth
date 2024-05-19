@@ -147,6 +147,44 @@ func TestGetRecordsByField(t *testing.T) {
 	}
 }
 
+func TestGetIdByFieldAndField(t *testing.T) {
+
+	beforeEachFDBT()
+	defer afterEachFDBT()
+
+	age := 20
+	name := "userName"
+	user := User{name, age}
+	id, _ := DB.Save(user)
+
+	retrievedId := DB.GetIdByFieldAndValue("User", "age", age)
+
+	if retrievedId != id {
+		t.Fatal("TestGetIdByFieldAndField: expected ", id, "got", retrievedId)
+	}
+
+	retrievedId = DB.GetIdByFieldAndValue("User", "name", name)
+
+	if retrievedId != id {
+		t.Fatal("TestGetIdByFieldAndField: expected ", id, "got", retrievedId)
+	}
+
+	// get non-existent user
+	retrievedId = DB.GetIdByFieldAndValue("User", "age", age+30)
+
+	if retrievedId != "" {
+		t.Fatal("TestGetIdByFieldAndField: expected ", "''", "got", retrievedId)
+	}
+
+	// get non-existent Record
+	retrievedId = DB.GetIdByFieldAndValue("Non-existent", "age", age+30)
+
+	if retrievedId != "" {
+		t.Fatal("TestGetIdByFieldAndField: expected ", "''", "got", retrievedId)
+	}
+
+}
+
 func TestGetAllOfType(t *testing.T) {
 	beforeEachFDBT()
 	defer afterEachFDBT()

@@ -33,12 +33,16 @@ func (us *UserStorage) Save(user models.User) (msg string, success bool) {
 		msg = fmt.Sprintf("user with email %s exists", user.Email)
 		return msg, success
 	}
+
+	user.HashPassword()
 	id, err := us.DB.Save(user)
+
 	if err != nil {
 		success = false
 		msg = err.Error()
 		return msg, success
 	}
+
 	us.DB.Commit()
 	success = true
 	msg = id
@@ -74,6 +78,10 @@ func (us *UserStorage) GetByField(field string, value any) []models.User {
 	return users
 }
 
+func (us *UserStorage) GetIdByField(field string, value any) string {
+	return us.DB.GetIdByFieldAndValue("User", field, value)
+}
+
 func (us *UserStorage) GetAll() []models.User {
 	var users []models.User
 	retrievedUsers := us.DB.GetAllOfType("User")
@@ -96,17 +104,14 @@ func (us *UserStorage) BuildClient(obj any) models.User {
 
 	// after recovery, zero value of enclosing function
 	// will be returned
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Println("UserStorage.BuildClient:", r)
-		}
-	}()
+	defer RecoverFromPanic()
 
 	user := models.User{}
 	if map_rep, ok := obj.(map[string]any); ok {
 		user.FirstName = map_rep["firstName"].(string)
 		user.LastName = map_rep["lastName"].(string)
 		user.Email = map_rep["email"].(string)
+		user.Password = map_rep["password"].(string)
 		phoneFloatVal, _ := getFloat64Equivalent(map_rep["phone"])
 		user.Phone = int(phoneFloatVal)
 	}
@@ -119,7 +124,11 @@ func (us *UserStorage) userWithEmailExist(email string) bool {
 }
 
 func (us *UserStorage) isValidUser(user models.User) bool {
-	if user.Email == "" || user.FirstName == "" || user.LastName == "" || user.Phone == 0 {
+	if user.Email == "" ||
+		user.FirstName == "" ||
+		user.LastName == "" ||
+		user.Phone == 0 ||
+		user.Password == "" {
 		return false
 	}
 	return true
@@ -164,6 +173,12 @@ func getMapRepOfUser() map[string]any {
 	jsonBytes, _ := json.Marshal(models.User{})
 	json.Unmarshal(jsonBytes, &mapRep)
 	return mapRep
+}
+
+func RecoverFromPanic() {
+	if r := recover(); r != nil {
+		fmt.Println("UserStorage.BuildClient:", r)
+	}
 }
 
 func MakeUserStorage(db_path string) Storage[models.User] {
