@@ -17,6 +17,7 @@ func beforeEachUST() {
 }
 
 func afterEachUST() {
+	storage.RemoveDbSingleton(users_storage_test_db_path)
 	os.Remove(users_storage_test_db_path)
 }
 
@@ -34,7 +35,7 @@ func TestSaveAndGetUser(t *testing.T) {
 
 	id, success := US.Save(user)
 	if !success {
-		t.Fatal("TestSaveAndGetUser: id should not be empty")
+		t.Fatal("TestSaveAndGetUser: success should be true")
 	}
 
 	retrievedUser, _ := US.Get(id)
@@ -66,7 +67,7 @@ func TestUpdateUser(t *testing.T) {
 
 	id, success := US.Save(user)
 	if !success {
-		t.Fatal("TestUpdateUser: id should not be empty")
+		t.Fatal("TestUpdateUser: success should be true")
 	}
 
 	retrievedUser, _ := US.Get(id)
@@ -98,7 +99,7 @@ func TestDeleteUser(t *testing.T) {
 
 	id, success := US.Save(user)
 	if !success {
-		t.Fatal("TestDeleteUser: id should not be empty")
+		t.Fatal("TestDeleteUser: success should be true")
 	}
 
 	retrievedUser, _ := US.Get(id)
@@ -134,7 +135,7 @@ func TestGetUserByField(t *testing.T) {
 
 	_, success := US.Save(user)
 	if !success {
-		t.Fatal("TestGetUserByField: id should not be empty")
+		t.Fatal("TestGetUserByField: success should be true")
 	}
 
 	retrievedUser := US.GetByField("email", email)[0]
@@ -192,7 +193,7 @@ func TestGetAllUsers(t *testing.T) {
 		}
 		_, success := US.Save(user)
 		if !success {
-			t.Fatal("TestGetUserByField: id should not be empty")
+			t.Fatal("TestGetUserByField: success should be true")
 		}
 	}
 

@@ -13,7 +13,7 @@ import (
 var UserStorage = storage.MakeUserStorage("")
 
 func SaveUser(c echo.Context) error {
-	body := getBodyInMap(c)
+	body := GetBodyInMap(c)
 	userDesc, ok := body["data"].(map[string]any)
 	response := map[string]string{}
 
@@ -47,7 +47,7 @@ func GetUser(c echo.Context) error {
 }
 
 func UpdateUser(c echo.Context) error {
-	body := getBodyInMap(c)
+	body := GetBodyInMap(c)
 	updateDesc, ok := body["data"].(map[string]any)
 	response := map[string]string{}
 

@@ -17,6 +17,7 @@ func beforeEachTSF() {
 
 func afterEachTSF() {
 	os.Remove(temp_test_db_path)
+	storage.RemoveDbSingleton(temp_test_db_path)
 }
 
 func TestSetKeyToValAndGetVal(t *testing.T) {

@@ -21,6 +21,7 @@ func beforeEachUAPIT() {
 }
 
 func afterEachUAPIT() {
+	storage.RemoveDbSingleton(users_api_test_db_path)
 	os.Remove(users_api_test_db_path)
 }
 

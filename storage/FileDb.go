@@ -27,10 +27,8 @@ func (db *FileDb) Reload() error {
 	db.inMemoryStore = make(map[string]any)
 	content, _ := os.ReadFile(db.path)
 
-	err := json.Unmarshal(content, &(db.inMemoryStore))
-	if err != nil {
-		return err
-	}
+	json.Unmarshal(content, &(db.inMemoryStore))
+
 	return nil
 }
 
@@ -165,7 +163,8 @@ func (db *FileDb) Commit() error {
 }
 
 func (db *FileDb) DeleteDb() error {
-	err = os.Remove(db.path)
+	delete(FILE_DB_MAP, db.path)
+	err := os.Remove(db.path)
 	return err
 }
 
@@ -201,10 +200,30 @@ func getFloat64Equivalent(value any) (float64, bool) {
 	return 0, false
 }
 
-var Db, err = new(FileDb).New("db.json")
+var FILE_DB_MAP = map[string]*FileDb{}
 
 func MakeFileDb(db_path string) (*FileDb, error) {
-	return new(FileDb).New(db_path)
+	path := db_path
+
+	if path == "" {
+		path = "file_db.json"
+	}
+
+	// implements singleton pattern
+	if FILE_DB_MAP[path] != nil {
+		return FILE_DB_MAP[path], nil
+	}
+
+	file_db, err := new(FileDb).New(path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	FILE_DB_MAP[path] = file_db
+	return file_db, nil
 }
 
-var GLOBAL_FILE_DB, _ = MakeFileDb("file_db.json")
+func RemoveDbSingleton(key string) {
+	delete(FILE_DB_MAP, key)
+}

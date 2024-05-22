@@ -34,6 +34,7 @@ func beforeEachFDBT() {
 }
 
 func afterEachFDBT() {
+	storage.RemoveDbSingleton(test_db_path)
 	DB.DeleteDb()
 }
 

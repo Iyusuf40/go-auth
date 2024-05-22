@@ -46,6 +46,7 @@ func (us *UserStorage) Save(user models.User) (msg string, success bool) {
 	us.DB.Commit()
 	success = true
 	msg = id
+
 	return msg, success
 }
 
@@ -182,10 +183,13 @@ func RecoverFromPanic() {
 }
 
 func MakeUserStorage(db_path string) Storage[models.User] {
-	var DB DB_Engine = GLOBAL_FILE_DB
-	if db_path != "" {
-		DB, _ = MakeFileDb(db_path)
+	File_DB, err := MakeFileDb(db_path)
+
+	if err != nil {
+		panic(err)
 	}
+
+	var DB DB_Engine = File_DB
 	US := new(UserStorage)
 	US.DB = DB
 	return US
