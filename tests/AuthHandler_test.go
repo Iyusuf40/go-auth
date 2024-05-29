@@ -17,7 +17,7 @@ var AUTH_US storage.Storage[models.User]
 
 func beforeEachAUTH_TEST() {
 	AUTH_US = storage.MakeUserStorage(AuthHandler_userstorage_test_db_path)
-	AUTH_HANDLER = auth.MakeAUthHandler(AuthHandler_tempDBstorage_test_db_path,
+	AUTH_HANDLER = auth.MakeAuthHandler(AuthHandler_tempDBstorage_test_db_path,
 		AuthHandler_userstorage_test_db_path)
 }
 

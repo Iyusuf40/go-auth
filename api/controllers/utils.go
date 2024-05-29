@@ -8,7 +8,11 @@ import (
 )
 
 func GetBodyInMap(c echo.Context) map[string]any {
-	body, _ := io.ReadAll(c.Request().Body)
+	return ReadFromReaderIntoMap(c.Request().Body)
+}
+
+func ReadFromReaderIntoMap(r io.Reader) map[string]any {
+	body, _ := io.ReadAll(r)
 	var bodyMap map[string]any
 	json.Unmarshal(body, &bodyMap)
 	return bodyMap
