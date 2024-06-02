@@ -4,21 +4,25 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
-	"reflect"
 	"strings"
 
 	"github.com/google/uuid"
 )
 
 type FileDb struct {
-	path                   string
-	inMemoryStore          map[string]any
-	OBJ_TYPE_KEY_SEPARATOR string
+	path                       string
+	recordsName                string
+	inMemoryStore              map[string]any
+	RECORDS_NAME_KEY_SEPARATOR string
 }
 
-func (db *FileDb) New(db_path string) (*FileDb, error) {
+func (db *FileDb) New(db_path, recordsName string) (*FileDb, error) {
+	if db_path == "" || recordsName == "" {
+		panic("FileDb.New: db_path and objectType must not be empty")
+	}
 	db.path = db_path
-	db.OBJ_TYPE_KEY_SEPARATOR = "-"
+	db.recordsName = recordsName
+	db.RECORDS_NAME_KEY_SEPARATOR = "-"
 	err := db.Reload()
 	return db, err
 }
@@ -38,7 +42,7 @@ func (db *FileDb) AllRecordsCount() int {
 
 func (db *FileDb) Save(obj any) (string, error) {
 	uid := uuid.NewString()
-	id := reflect.TypeOf(obj).Name() + db.OBJ_TYPE_KEY_SEPARATOR + uid
+	id := db.recordsName + db.RECORDS_NAME_KEY_SEPARATOR + uid
 	json_rep, err := json.Marshal(obj) // test if it can be jsoned
 	if err != nil {
 		return "", err
@@ -63,12 +67,8 @@ func (db *FileDb) Get(id string) (any, error) {
 	return nil, errors.New("FileDb: Get: failed to get object with id: " + id)
 }
 
-func (db *FileDb) GetRecordsByField(objTypeName, field string, value any) ([]map[string]any, error) {
-	if objTypeName == "" {
-		return nil, errors.New("FileDb: GetRecordsByField: no records found for " + objTypeName)
-	}
-
-	var listOfRecordsOfSameType = db.GetAllOfType(objTypeName)
+func (db *FileDb) GetRecordsByField(field string, value any) ([]map[string]any, error) {
+	var listOfRecordsOfSameType = db.GetAllOfRecords()
 
 	var listOfMatchedRecords []map[string]any
 	var compValue any
@@ -90,13 +90,15 @@ func (db *FileDb) GetRecordsByField(objTypeName, field string, value any) ([]map
 	return listOfMatchedRecords, nil
 }
 
-func (db *FileDb) GetIdByFieldAndValue(objTypeName, field string, value any) string {
+func (db *FileDb) GetIdByFieldAndValue(field string, value any) string {
+
+	recordsName := db.recordsName
 	for key, val := range db.inMemoryStore {
-		if strings.HasPrefix(key, objTypeName) {
+		if strings.HasPrefix(key, recordsName) {
 			concVal, ok := val.(map[string]any)
 			if !ok {
 				panic(`FileDb: GetRecordsByField: records found for is not of  
-					map[string]any type` + objTypeName)
+					map[string]any type` + recordsName)
 			}
 			if concVal[field] == value {
 				return key
@@ -113,15 +115,15 @@ func (db *FileDb) GetIdByFieldAndValue(objTypeName, field string, value any) str
 	return ""
 }
 
-func (db *FileDb) GetAllOfType(objTypeName string) []map[string]any {
+func (db *FileDb) GetAllOfRecords() []map[string]any {
 	var listOfRecordsOfSameType []map[string]any
-
+	recordsName := db.recordsName
 	for key, val := range db.inMemoryStore {
-		if strings.HasPrefix(key, objTypeName) {
+		if strings.HasPrefix(key, recordsName) {
 			concVal, ok := val.(map[string]any)
 			if !ok {
 				panic(`FileDb: GetRecordsByField: records found for is not of  
-					map[string]any type` + objTypeName)
+					map[string]any type` + recordsName)
 			}
 			listOfRecordsOfSameType = append(listOfRecordsOfSameType, concVal)
 		}
@@ -202,28 +204,35 @@ func getFloat64Equivalent(value any) (float64, bool) {
 
 var FILE_DB_MAP = map[string]*FileDb{}
 
-func MakeFileDb(db_path string) (*FileDb, error) {
+func MakeFileDb(db_path string, recordsName string) (*FileDb, error) {
 	path := db_path
+
+	if recordsName == "" {
+		panic("MakeFileDb: recordsName cannot be empty")
+	}
 
 	if path == "" {
 		path = "file_db.json"
 	}
 
 	// implements singleton pattern
-	if FILE_DB_MAP[path] != nil {
-		return FILE_DB_MAP[path], nil
+	if FILE_DB_MAP[path+recordsName] != nil {
+		return FILE_DB_MAP[path+recordsName], nil
 	}
 
-	file_db, err := new(FileDb).New(path)
+	file_db, err := new(FileDb).New(path, recordsName)
 
 	if err != nil {
-		return nil, err
+		panic("MakeFileDb: " + err.Error())
 	}
 
-	FILE_DB_MAP[path] = file_db
+	FILE_DB_MAP[path+recordsName] = file_db
 	return file_db, nil
 }
 
-func RemoveDbSingleton(key string) {
-	delete(FILE_DB_MAP, key)
+func RemoveDbSingleton(db_path, recordsName string) {
+	if recordsName == "" {
+		panic("RemoveDbSingleton: recordsName cannot be empty")
+	}
+	delete(FILE_DB_MAP, db_path+recordsName)
 }

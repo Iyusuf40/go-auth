@@ -29,9 +29,9 @@ type DB_Engine interface {
 	Delete(id string)
 	// if FileDb is the Engine, field is the json tag if it
 	// is defined on the obj
-	GetRecordsByField(objTypeName, field string, value any) ([]map[string]any, error)
-	GetIdByFieldAndValue(objTypeName, field string, value any) string
-	GetAllOfType(objTypeName string) []map[string]any
+	GetRecordsByField(field string, value any) ([]map[string]any, error)
+	GetIdByFieldAndValue(field string, value any) string
+	GetAllOfRecords() []map[string]any
 	Commit() error
 }
 

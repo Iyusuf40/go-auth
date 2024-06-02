@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var UserStorage = storage.MakeUserStorage("")
+var UserStorage = storage.MakeUserStorage("", "")
 
 func SaveUser(c echo.Context) error {
 	body := GetBodyInMap(c)

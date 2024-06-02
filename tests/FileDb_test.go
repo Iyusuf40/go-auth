@@ -30,11 +30,11 @@ var test_db_path = "test_db.json"
 var DB *storage.FileDb
 
 func beforeEachFDBT() {
-	DB, _ = storage.MakeFileDb(test_db_path)
+	DB, _ = storage.MakeFileDb(test_db_path, "User")
 }
 
 func afterEachFDBT() {
-	storage.RemoveDbSingleton(test_db_path)
+	storage.RemoveDbSingleton(test_db_path, "User")
 	DB.DeleteDb()
 }
 
@@ -102,7 +102,7 @@ func TestGetRecordsByField(t *testing.T) {
 	DB.Save(user)
 	var age float32 = 20
 
-	records, err := DB.GetRecordsByField("User", "age", age)
+	records, err := DB.GetRecordsByField("age", age)
 
 	if err != nil {
 		t.Fatal(err)
@@ -114,7 +114,7 @@ func TestGetRecordsByField(t *testing.T) {
 	}
 
 	nonExistentAge := 10
-	records, err = DB.GetRecordsByField("User", "age", nonExistentAge)
+	records, err = DB.GetRecordsByField("age", nonExistentAge)
 
 	if err != nil {
 		t.Fatal(err)
@@ -125,7 +125,7 @@ func TestGetRecordsByField(t *testing.T) {
 			"got", len(records))
 	}
 
-	records, err = DB.GetRecordsByField("User", "name", "user")
+	records, err = DB.GetRecordsByField("name", "user")
 
 	if err != nil {
 		t.Fatal(err)
@@ -136,7 +136,7 @@ func TestGetRecordsByField(t *testing.T) {
 			"got", len(records))
 	}
 
-	records, err = DB.GetRecordsByField("NoRecord", "age", nonExistentAge)
+	records, err = DB.GetRecordsByField("age", nonExistentAge)
 
 	if err != nil {
 		t.Fatal(err)
@@ -158,27 +158,27 @@ func TestGetIdByFieldAndField(t *testing.T) {
 	user := User{name, age}
 	id, _ := DB.Save(user)
 
-	retrievedId := DB.GetIdByFieldAndValue("User", "age", age)
+	retrievedId := DB.GetIdByFieldAndValue("age", age)
 
 	if retrievedId != id {
 		t.Fatal("TestGetIdByFieldAndField: expected ", id, "got", retrievedId)
 	}
 
-	retrievedId = DB.GetIdByFieldAndValue("User", "name", name)
+	retrievedId = DB.GetIdByFieldAndValue("name", name)
 
 	if retrievedId != id {
 		t.Fatal("TestGetIdByFieldAndField: expected ", id, "got", retrievedId)
 	}
 
 	// get non-existent user
-	retrievedId = DB.GetIdByFieldAndValue("User", "age", age+30)
+	retrievedId = DB.GetIdByFieldAndValue("age", age+30)
 
 	if retrievedId != "" {
 		t.Fatal("TestGetIdByFieldAndField: expected ", "''", "got", retrievedId)
 	}
 
 	// get non-existent Record
-	retrievedId = DB.GetIdByFieldAndValue("Non-existent", "age", age+30)
+	retrievedId = DB.GetIdByFieldAndValue("age", age+30)
 
 	if retrievedId != "" {
 		t.Fatal("TestGetIdByFieldAndField: expected ", "''", "got", retrievedId)
@@ -186,7 +186,7 @@ func TestGetIdByFieldAndField(t *testing.T) {
 
 }
 
-func TestGetAllOfType(t *testing.T) {
+func TestGetAllOfRecords(t *testing.T) {
 	beforeEachFDBT()
 	defer afterEachFDBT()
 
@@ -196,7 +196,7 @@ func TestGetAllOfType(t *testing.T) {
 	for i := 0; i < noOfSaves; i++ {
 		DB.Save(user)
 	}
-	allSavedUsers := DB.GetAllOfType("User")
+	allSavedUsers := DB.GetAllOfRecords()
 
 	if len(allSavedUsers) != noOfSaves {
 		t.Fatal("TestGetRecordsByField: length of records returned should be", noOfSaves)

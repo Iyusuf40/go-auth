@@ -12,8 +12,12 @@ type TempStoreFileDbImpl struct {
 	Init     bool
 }
 
-func (TS *TempStoreFileDbImpl) New(dbFile string) TempStore {
-	fileDb, _ := MakeFileDb(dbFile)
+func (TS *TempStoreFileDbImpl) New(dbFile, recordsName string) TempStore {
+	if recordsName == "" {
+		recordsName = reflect.TypeOf(*TS).Name()
+	}
+
+	fileDb, _ := MakeFileDb(dbFile, recordsName)
 	TS.db = fileDb
 	TS.reload()
 	return TS
@@ -142,8 +146,7 @@ func (TS *TempStoreFileDbImpl) deleteKeyTimerAndValueHelper(key string) {
 }
 
 func (TS *TempStoreFileDbImpl) getMapStore() map[string]any {
-	TS_name := reflect.TypeOf(*TS).Name()
-	mapStoreList, _ := TS.db.GetRecordsByField(TS_name, "Init", true)
+	mapStoreList, _ := TS.db.GetRecordsByField("Init", true)
 	if mapStoreList == nil {
 		return nil
 	}
@@ -157,8 +160,7 @@ func (TS *TempStoreFileDbImpl) getMapStore() map[string]any {
 }
 
 func (TS *TempStoreFileDbImpl) getTimerMap() map[string]any {
-	TS_name := reflect.TypeOf(*TS).Name()
-	mapStoreList, _ := TS.db.GetRecordsByField(TS_name, "Init", true)
+	mapStoreList, _ := TS.db.GetRecordsByField("Init", true)
 	if mapStoreList == nil {
 		return nil
 	}
@@ -183,6 +185,6 @@ func (TS *TempStoreFileDbImpl) keyExistsInTimerMap(key string) bool {
 	return exists
 }
 
-func MakeTempStoreFileDbImpl(db_path string) TempStore {
-	return new(TempStoreFileDbImpl).New(db_path)
+func MakeTempStoreFileDbImpl(db_path, recordsName string) TempStore {
+	return new(TempStoreFileDbImpl).New(db_path, recordsName)
 }

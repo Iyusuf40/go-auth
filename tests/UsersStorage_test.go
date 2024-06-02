@@ -13,11 +13,11 @@ var users_storage_test_db_path = "users_store_test_db.json"
 var US storage.Storage[models.User]
 
 func beforeEachUST() {
-	US = storage.MakeUserStorage(users_storage_test_db_path)
+	US = storage.MakeUserStorage(users_storage_test_db_path, "U")
 }
 
 func afterEachUST() {
-	storage.RemoveDbSingleton(users_storage_test_db_path)
+	storage.RemoveDbSingleton(users_storage_test_db_path, "U")
 	os.Remove(users_storage_test_db_path)
 }
 
@@ -67,7 +67,7 @@ func TestUpdateUser(t *testing.T) {
 
 	id, success := US.Save(user)
 	if !success {
-		t.Fatal("TestUpdateUser: success should be true")
+		t.Fatal("TestUpdateUser: success should be true; msg:", id)
 	}
 
 	retrievedUser, _ := US.Get(id)

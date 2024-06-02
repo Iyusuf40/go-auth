@@ -12,12 +12,12 @@ var temp_test_db_path = "temp_store_test_db.json"
 var TS storage.TempStore
 
 func beforeEachTSF() {
-	TS = storage.MakeTempStoreFileDbImpl(temp_test_db_path)
+	TS = storage.MakeTempStoreFileDbImpl(temp_test_db_path, "T")
 }
 
 func afterEachTSF() {
 	os.Remove(temp_test_db_path)
-	storage.RemoveDbSingleton(temp_test_db_path)
+	storage.RemoveDbSingleton(temp_test_db_path, "T")
 }
 
 func TestSetKeyToValAndGetVal(t *testing.T) {

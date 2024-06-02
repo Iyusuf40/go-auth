@@ -3,6 +3,7 @@ package storage
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"github.com/Iyusuf40/go-auth/models"
 )
@@ -74,18 +75,18 @@ func (us *UserStorage) Delete(id string) {
 func (us *UserStorage) GetByField(field string, value any) []models.User {
 	var users []models.User
 	var retrievedUsers []map[string]any
-	retrievedUsers, _ = us.DB.GetRecordsByField("User", field, value)
+	retrievedUsers, _ = us.DB.GetRecordsByField(field, value)
 	users = us.buildManyUsers(retrievedUsers)
 	return users
 }
 
 func (us *UserStorage) GetIdByField(field string, value any) string {
-	return us.DB.GetIdByFieldAndValue("User", field, value)
+	return us.DB.GetIdByFieldAndValue(field, value)
 }
 
 func (us *UserStorage) GetAll() []models.User {
 	var users []models.User
-	retrievedUsers := us.DB.GetAllOfType("User")
+	retrievedUsers := us.DB.GetAllOfRecords()
 	users = us.buildManyUsers(retrievedUsers)
 	return users
 }
@@ -120,7 +121,7 @@ func (us *UserStorage) BuildClient(obj any) models.User {
 }
 
 func (us *UserStorage) userWithEmailExist(email string) bool {
-	queryRes, _ := us.DB.GetRecordsByField("User", "email", email)
+	queryRes, _ := us.DB.GetRecordsByField("email", email)
 	return len(queryRes) > 0
 }
 
@@ -182,8 +183,12 @@ func RecoverFromPanic() {
 	}
 }
 
-func MakeUserStorage(db_path string) Storage[models.User] {
-	File_DB, err := MakeFileDb(db_path)
+func MakeUserStorage(db_path, recordsName string) Storage[models.User] {
+	if recordsName == "" {
+		recordsName = reflect.TypeOf(models.User{}).Name()
+	}
+
+	File_DB, err := MakeFileDb(db_path, recordsName)
 
 	if err != nil {
 		panic(err)

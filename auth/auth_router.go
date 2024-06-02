@@ -21,7 +21,7 @@ func ServeAUTH() {
 	e.Logger.Fatal(e.Start(":8081"))
 }
 
-var AUTH_HANDLER = MakeAuthHandler("", "")
+var AUTH_HANDLER = MakeAuthHandler("", "", "")
 
 func Login(c echo.Context) error {
 	body := controllers.GetBodyInMap(c)

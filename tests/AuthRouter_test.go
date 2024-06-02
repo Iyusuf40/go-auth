@@ -14,15 +14,16 @@ import (
 )
 
 var auth_test_db_path = "auth_router_store_test_db.json"
+var auth_test_user_recordsName = "Users"
 var USER_STORE storage.Storage[models.User]
 
 func beforeEachUAUTHT() {
-	USER_STORE = storage.MakeUserStorage(auth_test_db_path)
-	auth.AUTH_HANDLER = auth.MakeAuthHandler(auth_test_db_path, auth_test_db_path)
+	USER_STORE = storage.MakeUserStorage(auth_test_db_path, auth_test_user_recordsName)
+	auth.AUTH_HANDLER = auth.MakeAuthHandler(auth_test_db_path, auth_test_db_path, auth_test_user_recordsName)
 }
 
 func afterEachUAUTHT() {
-	storage.RemoveDbSingleton(auth_test_db_path)
+	storage.RemoveDbSingleton(auth_test_db_path, auth_test_user_recordsName)
 	os.Remove(auth_test_db_path)
 }
 

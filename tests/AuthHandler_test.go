@@ -11,21 +11,22 @@ import (
 
 var AuthHandler_userstorage_test_db_path = "auth_users_store_test_db.json"
 var AuthHandler_tempDBstorage_test_db_path = "auth_users_store_test_db.json"
+var Auth_Users_RecordsName = "Users"
 
 var AUTH_HANDLER *auth.AuthHandler
 var AUTH_US storage.Storage[models.User]
 
 func beforeEachAUTH_TEST() {
-	AUTH_US = storage.MakeUserStorage(AuthHandler_userstorage_test_db_path)
+	AUTH_US = storage.MakeUserStorage(AuthHandler_userstorage_test_db_path, Auth_Users_RecordsName)
 	AUTH_HANDLER = auth.MakeAuthHandler(AuthHandler_tempDBstorage_test_db_path,
-		AuthHandler_userstorage_test_db_path)
+		AuthHandler_userstorage_test_db_path, Auth_Users_RecordsName)
 }
 
 func afterEachAUTH_TEST() {
 	os.Remove(AuthHandler_userstorage_test_db_path)
 	os.Remove(AuthHandler_tempDBstorage_test_db_path)
-	storage.RemoveDbSingleton(AuthHandler_userstorage_test_db_path)
-	storage.RemoveDbSingleton(AuthHandler_tempDBstorage_test_db_path)
+	storage.RemoveDbSingleton(AuthHandler_userstorage_test_db_path, Auth_Users_RecordsName)
+	storage.RemoveDbSingleton(AuthHandler_tempDBstorage_test_db_path, Auth_Users_RecordsName)
 }
 
 func TestHandleLogin(t *testing.T) {

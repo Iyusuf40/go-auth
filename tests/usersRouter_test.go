@@ -15,13 +15,14 @@ import (
 )
 
 var users_api_test_db_path = "users_router_store_test_db.json"
+var users_api_test_recordsName = "Users"
 
 func beforeEachUAPIT() {
-	controllers.UserStorage = storage.MakeUserStorage(users_api_test_db_path)
+	controllers.UserStorage = storage.MakeUserStorage(users_api_test_db_path, users_api_test_recordsName)
 }
 
 func afterEachUAPIT() {
-	storage.RemoveDbSingleton(users_api_test_db_path)
+	storage.RemoveDbSingleton(users_api_test_db_path, users_api_test_recordsName)
 	os.Remove(users_api_test_db_path)
 }
 
