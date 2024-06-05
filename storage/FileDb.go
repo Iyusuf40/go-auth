@@ -215,9 +215,10 @@ func MakeFileDb(db_path string, recordsName string) (*FileDb, error) {
 		path = "file_db.json"
 	}
 
+	key := path + recordsName
 	// implements singleton pattern
-	if FILE_DB_MAP[path+recordsName] != nil {
-		return FILE_DB_MAP[path+recordsName], nil
+	if FILE_DB_MAP[key] != nil {
+		return FILE_DB_MAP[key], nil
 	}
 
 	file_db, err := new(FileDb).New(path, recordsName)
@@ -226,7 +227,7 @@ func MakeFileDb(db_path string, recordsName string) (*FileDb, error) {
 		panic("MakeFileDb: " + err.Error())
 	}
 
-	FILE_DB_MAP[path+recordsName] = file_db
+	FILE_DB_MAP[key] = file_db
 	return file_db, nil
 }
 
@@ -234,5 +235,11 @@ func RemoveDbSingleton(db_path, recordsName string) {
 	if recordsName == "" {
 		panic("RemoveDbSingleton: recordsName cannot be empty")
 	}
-	delete(FILE_DB_MAP, db_path+recordsName)
+
+	if db_path == "" {
+		db_path = "file_db.json"
+	}
+
+	key := db_path + recordsName
+	delete(FILE_DB_MAP, key)
 }
