@@ -35,8 +35,11 @@ type DB_Engine interface {
 	Commit() error
 }
 
-// for every transaction these processes
-//		receive connection to db
-//		setup transaction to be for particular table
-//		operations
-//			create common executions
+func GetDB_Engine(engine_dbms, database, recordsName string, fieldAndDesc ...SQL_TABLE_COLUMN_FIELD_AND_DESC) (DB_Engine, error) {
+	switch engine_dbms {
+	case "postgres":
+		return MakePostgresEngine(database, recordsName, fieldAndDesc...)
+	default:
+		return MakeFileDb(database, recordsName)
+	}
+}

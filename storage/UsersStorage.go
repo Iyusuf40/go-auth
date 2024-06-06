@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Iyusuf40/go-auth/config"
 	"github.com/Iyusuf40/go-auth/models"
 )
 
@@ -183,14 +184,14 @@ func RecoverFromPanic() {
 	}
 }
 
-func MakeUserStorage(db_path, recordsName string) Storage[models.User] {
+func MakeUserStorage(database, recordsName string) Storage[models.User] {
 	if recordsName == "" {
 		recordsName = reflect.TypeOf(models.User{}).Name()
 	}
 
-	// STORAGE, err := MakeFileDb(db_path, recordsName)
-	STORAGE, err := MakePostgresEngine(db_path,
-		recordsName,
+	dbms := config.DBMS
+
+	STORAGE, err := GetDB_Engine(dbms, database, recordsName,
 		SQL_TABLE_COLUMN_FIELD_AND_DESC{`email`, "VARCHAR(128)"},
 		SQL_TABLE_COLUMN_FIELD_AND_DESC{`firstName`, "VARCHAR(128)"},
 		SQL_TABLE_COLUMN_FIELD_AND_DESC{`lastName`, "VARCHAR(128)"},

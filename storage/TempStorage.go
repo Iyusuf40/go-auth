@@ -7,3 +7,7 @@ type TempStore interface {
 	ChangeKeyEpiry(key string, newExpiry float64) bool
 	DelKey(key string) bool
 }
+
+func GET_TempStore(database, recordsName string) TempStore {
+	return MakeTempStoreFileDbImpl(database, recordsName)
+}

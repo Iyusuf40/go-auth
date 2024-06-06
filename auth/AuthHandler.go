@@ -45,9 +45,9 @@ func (auth_h *AuthHandler) ExtendSession(sessionId string, duration float64) {
 	auth_h.temp_store.ChangeKeyEpiry(sessionId, duration)
 }
 
-func MakeAuthHandler(temp_store_db_path, users_store_db_path, recordsName string) *AuthHandler {
+func MakeAuthHandler(temp_store_db, users_store_db, recordsName string) *AuthHandler {
 	auth_h := new(AuthHandler)
-	auth_h.temp_store = storage.MakeTempStoreFileDbImpl(temp_store_db_path, recordsName)
-	auth_h.users_store = storage.MakeUserStorage(users_store_db_path, recordsName)
+	auth_h.temp_store = storage.GET_TempStore(temp_store_db, recordsName)
+	auth_h.users_store = storage.MakeUserStorage(users_store_db, recordsName)
 	return auth_h
 }

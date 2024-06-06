@@ -5,13 +5,11 @@ import (
 	"testing"
 
 	"github.com/Iyusuf40/go-auth/auth"
+	"github.com/Iyusuf40/go-auth/config"
 	"github.com/Iyusuf40/go-auth/models"
 	"github.com/Iyusuf40/go-auth/storage"
 )
 
-// var AuthHandler_userstorage_test_db_path = "auth_users_store_test_db.json"
-// var AuthHandler_tempDBstorage_test_db_path = "auth_users_store_test_db.json"
-// var Auth_Users_RecordsName = "Users"
 var AuthHandler_userstorage_test_db_path = "test"
 var AuthHandler_tempDBstorage_test_db_path = "test"
 var Auth_Users_RecordsName = "users"
@@ -26,12 +24,16 @@ func beforeEachAUTH_TEST() {
 }
 
 func afterEachAUTH_TEST() {
-	os.Remove(AuthHandler_userstorage_test_db_path)
-	os.Remove(AuthHandler_tempDBstorage_test_db_path)
-	// storage.RemoveDbSingleton(AuthHandler_userstorage_test_db_path, Auth_Users_RecordsName)
-	// storage.RemoveDbSingleton(AuthHandler_tempDBstorage_test_db_path, Auth_Users_RecordsName)
-	storage.RemovePostgressEngineSingleton(AuthHandler_userstorage_test_db_path, Auth_Users_RecordsName, true)
-	storage.RemovePostgressEngineSingleton(AuthHandler_tempDBstorage_test_db_path, Auth_Users_RecordsName, true)
+	if config.DBMS == "postgres" {
+		storage.RemovePostgressEngineSingleton(AuthHandler_userstorage_test_db_path, Auth_Users_RecordsName, true)
+		storage.RemovePostgressEngineSingleton(AuthHandler_tempDBstorage_test_db_path, Auth_Users_RecordsName, true)
+	} else {
+		storage.RemoveDbSingleton(AuthHandler_userstorage_test_db_path, Auth_Users_RecordsName)
+		storage.RemoveDbSingleton(AuthHandler_tempDBstorage_test_db_path, Auth_Users_RecordsName)
+		os.Remove(AuthHandler_userstorage_test_db_path)
+		os.Remove(AuthHandler_tempDBstorage_test_db_path)
+	}
+
 }
 
 func TestHandleLogin(t *testing.T) {

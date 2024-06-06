@@ -173,12 +173,6 @@ func (TS *TempStoreFileDbImpl) getTimerMap() map[string]any {
 	return timerMap
 }
 
-func (TS *TempStoreFileDbImpl) keyExistsInMapStore(key string) bool {
-	mapStore := TS.getMapStore()
-	_, exists := mapStore[key]
-	return exists
-}
-
 func (TS *TempStoreFileDbImpl) keyExistsInTimerMap(key string) bool {
 	timerMap := TS.getTimerMap()
 	_, exists := timerMap[key]

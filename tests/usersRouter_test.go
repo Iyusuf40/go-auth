@@ -9,13 +9,12 @@ import (
 	"testing"
 
 	"github.com/Iyusuf40/go-auth/api/controllers"
+	"github.com/Iyusuf40/go-auth/config"
 	"github.com/Iyusuf40/go-auth/models"
 	"github.com/Iyusuf40/go-auth/storage"
 	"github.com/labstack/echo/v4"
 )
 
-// var users_api_test_db_path = "users_router_store_test_db.json"
-// var users_api_test_recordsName = "Users"
 var users_api_test_db_path = "test"
 var users_api_test_recordsName = "users"
 
@@ -24,9 +23,12 @@ func beforeEachUAPIT() {
 }
 
 func afterEachUAPIT() {
-	// storage.RemoveDbSingleton(users_api_test_db_path, users_api_test_recordsName)
-	storage.RemovePostgressEngineSingleton(users_api_test_db_path, users_api_test_recordsName, true)
-	os.Remove(users_api_test_db_path)
+	if config.DBMS == "postgres" {
+		storage.RemovePostgressEngineSingleton(users_api_test_db_path, users_api_test_recordsName, true)
+	} else {
+		storage.RemoveDbSingleton(users_api_test_db_path, users_api_test_recordsName)
+		os.Remove(users_api_test_db_path)
+	}
 }
 
 func TestPOSTUser(t *testing.T) {

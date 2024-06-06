@@ -74,13 +74,13 @@ func (db *PostgresEngine) makeCreateTableStmt(fieldAndDesc ...SQL_TABLE_COLUMN_F
 		}
 	}
 
-	stmt += ")"
+	stmt += `)`
 
 	return stmt
 }
 
 func (db *PostgresEngine) AllRecordsCount() int {
-	stmt := fmt.Sprintf("SELECT COUNT(*) FROM %s;", db.tableName)
+	stmt := fmt.Sprintf(`SELECT COUNT(*) FROM "%s";`, db.tableName)
 	var count int
 	db.conn.QueryRow(context.Background(), stmt).Scan(&count)
 	return count
@@ -277,7 +277,7 @@ func MakePostgresEngine(database string, tableName string, fieldAndDesc ...SQL_T
 	return postgresEng, nil
 }
 
-func RemovePostgressEngineSingleton(database, tableName string, shouldDeleteTable bool) {
+func RemovePostgressEngineSingleton(database, tableName string, shouldDeleteTable ...bool) {
 	if tableName == "" {
 		panic("RemoveDbSingleton: tableName cannot be empty")
 	}
@@ -289,9 +289,19 @@ func RemovePostgressEngineSingleton(database, tableName string, shouldDeleteTabl
 	key := database + tableName
 	postgresEng, exists := POSTGRES_ENGINE_MAP[key]
 	if exists {
-		if shouldDeleteTable {
-			postgresEng.DeleteTable()
+		// this is just to make deleting a table dificult and intentional
+		if len(shouldDeleteTable) == 1 {
+			if shouldDeleteTable[0] && database == "test" {
+				postgresEng.DeleteTable()
+			}
 		}
+
+		if len(shouldDeleteTable) == 2 {
+			if shouldDeleteTable[0] && shouldDeleteTable[1] {
+				postgresEng.DeleteTable()
+			}
+		}
+
 		postgresEng.CloseConnection()
 		delete(POSTGRES_ENGINE_MAP, key)
 	}

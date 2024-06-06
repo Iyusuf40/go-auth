@@ -1,14 +1,15 @@
 package tests
 
 import (
+	"os"
 	"slices"
 	"testing"
 
+	"github.com/Iyusuf40/go-auth/config"
 	"github.com/Iyusuf40/go-auth/models"
 	"github.com/Iyusuf40/go-auth/storage"
 )
 
-// var users_storage_test_db_path = "users_store_test_db.json"
 var users_storage_test_db_path = "test"
 var US storage.Storage[models.User]
 
@@ -17,10 +18,13 @@ func beforeEachUST() {
 }
 
 func afterEachUST() {
-	// storage.RemoveDbSingleton(users_storage_test_db_path, "users")
-	storage.RemovePostgressEngineSingleton(users_storage_test_db_path, "users", true)
+	if config.DBMS == "postgres" {
+		storage.RemovePostgressEngineSingleton(users_storage_test_db_path, "users", true)
+	} else {
+		storage.RemoveDbSingleton(users_storage_test_db_path, "users")
+		os.Remove(users_storage_test_db_path)
+	}
 
-	// os.Remove(users_storage_test_db_path)
 }
 
 func TestSaveAndGetUser(t *testing.T) {
