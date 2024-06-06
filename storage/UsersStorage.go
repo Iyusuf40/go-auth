@@ -188,13 +188,21 @@ func MakeUserStorage(db_path, recordsName string) Storage[models.User] {
 		recordsName = reflect.TypeOf(models.User{}).Name()
 	}
 
-	File_DB, err := MakeFileDb(db_path, recordsName)
+	// STORAGE, err := MakeFileDb(db_path, recordsName)
+	STORAGE, err := MakePostgresEngine(db_path,
+		recordsName,
+		SQL_TABLE_COLUMN_FIELD_AND_DESC{`email`, "VARCHAR(128)"},
+		SQL_TABLE_COLUMN_FIELD_AND_DESC{`firstName`, "VARCHAR(128)"},
+		SQL_TABLE_COLUMN_FIELD_AND_DESC{`lastName`, "VARCHAR(128)"},
+		SQL_TABLE_COLUMN_FIELD_AND_DESC{`phone`, "integer"},
+		SQL_TABLE_COLUMN_FIELD_AND_DESC{`password`, "VARCHAR(128)"},
+	)
 
 	if err != nil {
 		panic(err)
 	}
 
-	var DB DB_Engine = File_DB
+	var DB DB_Engine = STORAGE
 	US := new(UserStorage)
 	US.DB = DB
 	return US

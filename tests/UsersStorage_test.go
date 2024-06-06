@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"os"
 	"slices"
 	"testing"
 
@@ -9,16 +8,19 @@ import (
 	"github.com/Iyusuf40/go-auth/storage"
 )
 
-var users_storage_test_db_path = "users_store_test_db.json"
+// var users_storage_test_db_path = "users_store_test_db.json"
+var users_storage_test_db_path = "test"
 var US storage.Storage[models.User]
 
 func beforeEachUST() {
-	US = storage.MakeUserStorage(users_storage_test_db_path, "U")
+	US = storage.MakeUserStorage(users_storage_test_db_path, "users")
 }
 
 func afterEachUST() {
-	storage.RemoveDbSingleton(users_storage_test_db_path, "U")
-	os.Remove(users_storage_test_db_path)
+	// storage.RemoveDbSingleton(users_storage_test_db_path, "users")
+	storage.RemovePostgressEngineSingleton(users_storage_test_db_path, "users", true)
+
+	// os.Remove(users_storage_test_db_path)
 }
 
 func TestSaveAndGetUser(t *testing.T) {
@@ -35,7 +37,7 @@ func TestSaveAndGetUser(t *testing.T) {
 
 	id, success := US.Save(user)
 	if !success {
-		t.Fatal("TestSaveAndGetUser: success should be true")
+		t.Fatal("TestSaveAndGetUser: success should be true;", id)
 	}
 
 	retrievedUser, _ := US.Get(id)

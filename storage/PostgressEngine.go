@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -25,7 +26,7 @@ func (db *PostgresEngine) New(database, tableName string, fieldAndDesc ...SQL_TA
 	postgresUrl := "postgres://yusuf:0@localhost:5432/" + database
 	conn, err := pgx.Connect(context.Background(), postgresUrl)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "PostgresEngine.New: Unable to connect to database: %v\n", err)
+		fmt.Fprintf(os.Stderr, "PostgresEngine.New: Unable to connect to database: %v", err)
 		return nil, err
 	}
 
@@ -36,7 +37,7 @@ func (db *PostgresEngine) New(database, tableName string, fieldAndDesc ...SQL_TA
 	_, err = conn.Exec(context.Background(), createTableStmt)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "PostgresEngine.New: Failed to create table: %v\n", err)
+		fmt.Fprintf(os.Stderr, "PostgresEngine.New: Failed to create table: %v", err)
 		return nil, err
 	}
 
@@ -62,14 +63,14 @@ func (db *PostgresEngine) makeCreateTableStmt(fieldAndDesc ...SQL_TABLE_COLUMN_F
 		return fieldAndDesc[i][0] < fieldAndDesc[j][0]
 	})
 
-	stmt := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (\n", db.tableName)
+	stmt := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS "%s" (`, db.tableName)
 
 	for i, fieldAndType := range fieldAndDesc {
 		field, description := fieldAndType[0], fieldAndType[1]
 		if i != len(fieldAndDesc)-1 {
-			stmt += fmt.Sprintf("%s		%s,\n", field, description)
+			stmt += fmt.Sprintf(`"%s"		%s,`, field, description)
 		} else {
-			stmt += fmt.Sprintf("%s		%s\n", field, description)
+			stmt += fmt.Sprintf(`"%s"		%s`, field, description)
 		}
 	}
 
@@ -79,7 +80,10 @@ func (db *PostgresEngine) makeCreateTableStmt(fieldAndDesc ...SQL_TABLE_COLUMN_F
 }
 
 func (db *PostgresEngine) AllRecordsCount() int {
-	return -1
+	stmt := fmt.Sprintf("SELECT COUNT(*) FROM %s;", db.tableName)
+	var count int
+	db.conn.QueryRow(context.Background(), stmt).Scan(&count)
+	return count
 }
 
 func (db *PostgresEngine) Save(obj any) (string, error) {
@@ -126,12 +130,12 @@ func (db *PostgresEngine) makeInsertStmtAndParameters(mapRep map[string]any) (st
 		return field1 < field2
 	})
 
-	stmt := fmt.Sprintf("INSERT INTO %s\n", db.tableName)
+	stmt := fmt.Sprintf(`INSERT INTO "%s"`, db.tableName)
 
 	values := []any{}
-	fields := "("
+	fields := `(`
 	// use placeholder positional params to be substituted in the prepared stmt
-	valuesPlaceHolder := "("
+	valuesPlaceHolder := `(`
 	for index, fieldAndValue := range fieldsAndValues {
 		field := fieldAndValue[0].(string)
 		value := fieldAndValue[1]
@@ -139,24 +143,24 @@ func (db *PostgresEngine) makeInsertStmtAndParameters(mapRep map[string]any) (st
 		// to be returned with the parametarized statement for insertion
 		values = append(values, value)
 		if index != len(fieldsAndValues)-1 {
-			fields += fmt.Sprintf("%s,", field)
-			valuesPlaceHolder += fmt.Sprintf("$%v,", index+1)
+			fields += fmt.Sprintf(`"%s",`, field)
+			valuesPlaceHolder += fmt.Sprintf(`$%v,`, index+1)
 		} else {
-			fields += field
-			valuesPlaceHolder += fmt.Sprintf("$%v", index+1)
+			fields += fmt.Sprintf(`"%s"`, field)
+			valuesPlaceHolder += fmt.Sprintf(`$%v`, index+1)
 		}
 	}
-	fields += ") VALUES\n"
-	valuesPlaceHolder += ");"
+	fields += `) VALUES`
+	valuesPlaceHolder += `);`
 
-	stmt = fmt.Sprintf("%s %s %s", stmt, fields, valuesPlaceHolder)
+	stmt = fmt.Sprintf(`%s %s %s`, stmt, fields, valuesPlaceHolder)
 	return stmt, values
 }
 
 // returns objects with any type so users can rebuild
 // objects with their type builders
 func (db *PostgresEngine) Get(id string) (any, error) {
-	stmt := fmt.Sprintf("SELECT * FROM %s WHERE id = $1;", db.tableName)
+	stmt := fmt.Sprintf(`SELECT * FROM "%s" WHERE id = $1;`, db.tableName)
 	row, err := db.conn.Query(context.Background(), stmt, id)
 
 	if err != nil {
@@ -171,27 +175,65 @@ func (db *PostgresEngine) Get(id string) (any, error) {
 }
 
 func (db *PostgresEngine) GetRecordsByField(field string, value any) ([]map[string]any, error) {
+	stmt := fmt.Sprintf(`SELECT * FROM "%s" WHERE "%s" = $1;`, db.tableName, field)
 
-	var listOfMatchedRecords []map[string]any
+	row, err := db.conn.Query(context.Background(), stmt, value)
 
-	return listOfMatchedRecords, nil
+	if err != nil {
+		return nil, err
+	}
+
+	listOfmapReps, err := pgx.CollectRows(row, pgx.RowToMap)
+	if err != nil {
+		return nil, err
+	}
+	return listOfmapReps, nil
 }
 
 func (db *PostgresEngine) GetIdByFieldAndValue(field string, value any) string {
+	listOfmapReps, err := db.GetRecordsByField(field, value)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		return ""
+	}
+
+	if len(listOfmapReps) > 1 {
+		err = errors.New("PostgresEngine.GetIdByFieldAndValue: returned list cannot be more than 1")
+		fmt.Fprintln(os.Stderr, err.Error())
+	}
+
+	if len(listOfmapReps) == 1 {
+		return listOfmapReps[0]["id"].(string)
+	}
+
 	return ""
 }
 
 func (db *PostgresEngine) GetAllOfRecords() []map[string]any {
-	var listOfRecordsOfSameType []map[string]any
+	stmt := fmt.Sprintf(`SELECT * FROM "%s";`, db.tableName)
 
-	return listOfRecordsOfSameType
+	row, _ := db.conn.Query(context.Background(), stmt)
+
+	listOfmapReps, _ := pgx.CollectRows(row, pgx.RowToMap)
+
+	return listOfmapReps
 }
 
 func (db *PostgresEngine) Delete(id string) {
+	stmt := fmt.Sprintf(`DELETE FROM "%s" WHERE id = $1;`, db.tableName)
+	_, err := db.conn.Exec(context.Background(), stmt, id)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+	}
 }
 
 func (db *PostgresEngine) Update(id string, data UpdateDesc) bool {
-	return false
+	stmt := fmt.Sprintf(`UPDATE "%s" SET "%s" = $1 WHERE id = $2;`, db.tableName, data.Field)
+	cmdTag, err := db.conn.Exec(context.Background(), stmt, data.Value, id)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+	}
+	return cmdTag.RowsAffected() == 1
 }
 
 func (db *PostgresEngine) Commit() error {
@@ -235,7 +277,7 @@ func MakePostgresEngine(database string, tableName string, fieldAndDesc ...SQL_T
 	return postgresEng, nil
 }
 
-func RemovePostgressEngineSingleton(database, tableName string) {
+func RemovePostgressEngineSingleton(database, tableName string, shouldDeleteTable bool) {
 	if tableName == "" {
 		panic("RemoveDbSingleton: tableName cannot be empty")
 	}
@@ -247,6 +289,9 @@ func RemovePostgressEngineSingleton(database, tableName string) {
 	key := database + tableName
 	postgresEng, exists := POSTGRES_ENGINE_MAP[key]
 	if exists {
+		if shouldDeleteTable {
+			postgresEng.DeleteTable()
+		}
 		postgresEng.CloseConnection()
 		delete(POSTGRES_ENGINE_MAP, key)
 	}

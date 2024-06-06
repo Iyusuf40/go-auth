@@ -13,8 +13,10 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var auth_test_db_path = "auth_router_store_test_db.json"
-var auth_test_user_recordsName = "Users"
+// var auth_test_db_path = "auth_router_store_test_db.json"
+// var auth_test_user_recordsName = "Users"
+var auth_test_db_path = "test"
+var auth_test_user_recordsName = "users"
 var USER_STORE storage.Storage[models.User]
 
 func beforeEachUAUTHT() {
@@ -23,7 +25,8 @@ func beforeEachUAUTHT() {
 }
 
 func afterEachUAUTHT() {
-	storage.RemoveDbSingleton(auth_test_db_path, auth_test_user_recordsName)
+	// storage.RemoveDbSingleton(auth_test_db_path, auth_test_user_recordsName)
+	storage.RemovePostgressEngineSingleton(auth_test_db_path, auth_test_user_recordsName, true)
 	os.Remove(auth_test_db_path)
 }
 

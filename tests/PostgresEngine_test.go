@@ -2,16 +2,10 @@ package tests
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/Iyusuf40/go-auth/storage"
 )
-
-// type User struct {
-// 	Name string `json:"name"`
-// 	Age  int    `json:"age"`
-// }
 
 var database = "test"
 var table = "users"
@@ -27,7 +21,7 @@ func beforeEachPOSTGRES_ENGINE_T() {
 
 func afterEachFPOSTGRES_ENGINE_T() {
 	POSTGRES_ENGINE.DeleteTable()
-	storage.RemovePostgressEngineSingleton(database, table)
+	storage.RemovePostgressEngineSingleton(database, table, false)
 }
 
 func TestSaveAndGetPOSTGRES_ENGINE(t *testing.T) {
@@ -205,21 +199,8 @@ func TestUpdatePOSTGRES_ENGINE(t *testing.T) {
 		)
 	}
 
-	// test after reload
-	POSTGRES_ENGINE.Commit()
-
 	if POSTGRES_ENGINE.AllRecordsCount() != 1 {
 		t.Fatal("TestUpdate: all records count should be 1")
-	}
-
-	obj, _ = POSTGRES_ENGINE.Get(id)
-	saved_user = new(User).buildUser(obj)
-
-	if saved_user.Name != updated_name {
-		t.Fatal(
-			"TestUpdate: failed to update Name field " +
-				"expected " + updated_name + " got " + saved_user.Name,
-		)
 	}
 }
 
@@ -232,13 +213,13 @@ func TestDeletePOSTGRES_ENGINE(t *testing.T) {
 	id, _ := POSTGRES_ENGINE.Save(user)
 
 	if POSTGRES_ENGINE.AllRecordsCount() != 1 {
-		t.Fatal("TestReload: records in inMemoryStore should be 1")
+		t.Fatal("TestReload: records in db should be 1")
 	}
 
 	POSTGRES_ENGINE.Delete(id)
 
 	if POSTGRES_ENGINE.AllRecordsCount() != 0 {
-		t.Fatal("TestReload: records in inMemoryStore should be 0")
+		t.Fatal("TestReload: records in db should be 0")
 	}
 }
 
@@ -259,31 +240,5 @@ func TestAllRecordsCountPOSTGRES_ENGINE(t *testing.T) {
 		if POSTGRES_ENGINE.AllRecordsCount() != i {
 			t.Fatal("TestAllRecordsCount: records in inMemoryStore should be " + fmt.Sprint(i))
 		}
-	}
-}
-
-func TestCommit_DeleteTable(t *testing.T) {
-
-	beforeEachPOSTGRES_ENGINE_T()
-	defer afterEachFPOSTGRES_ENGINE_T()
-
-	// test db_file does not exist
-	_, err := os.Stat(database)
-	if err == nil {
-		t.Fatal("TestCommit_DeleteDb: db_file should not exist")
-	}
-
-	// test db_file should exist after commit
-	POSTGRES_ENGINE.Commit()
-	_, err = os.Stat(database)
-	if err != nil {
-		t.Fatal("TestCommit_DeleteDb: db_file should exist")
-	}
-
-	// test db_file should not exist after DeleteDb
-	POSTGRES_ENGINE.DeleteTable()
-	_, err = os.Stat(database)
-	if err == nil {
-		t.Fatal("TestCommit_DeleteDb: db_file should not exist")
 	}
 }
