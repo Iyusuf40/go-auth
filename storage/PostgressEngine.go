@@ -29,6 +29,8 @@ func (db *PostgresEngine) New(database, tableName string, fieldAndDesc ...SQL_TA
 		return nil, err
 	}
 
+	db.tableName = tableName
+
 	createTableStmt := db.makeCreateTableStmt(fieldAndDesc...)
 
 	_, err = conn.Exec(context.Background(), createTableStmt)
@@ -49,7 +51,9 @@ func (db *PostgresEngine) New(database, tableName string, fieldAndDesc ...SQL_TA
 // retrieved from the second index
 func (db *PostgresEngine) makeCreateTableStmt(fieldAndDesc ...SQL_TABLE_COLUMN_FIELD_AND_DESC) string {
 
-	stmt := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (\n", db.tableName)
+	// create implicit id column
+	fieldAndDesc = append(fieldAndDesc,
+		SQL_TABLE_COLUMN_FIELD_AND_DESC{"id", "varchar(64) PRIMARY KEY"})
 
 	// make sure tables columns are created in a sorted manner
 	// hence during insertion we just need to sort the object's
@@ -58,9 +62,15 @@ func (db *PostgresEngine) makeCreateTableStmt(fieldAndDesc ...SQL_TABLE_COLUMN_F
 		return fieldAndDesc[i][0] < fieldAndDesc[j][0]
 	})
 
-	for _, fieldAndType := range fieldAndDesc {
+	stmt := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (\n", db.tableName)
+
+	for i, fieldAndType := range fieldAndDesc {
 		field, description := fieldAndType[0], fieldAndType[1]
-		stmt += fmt.Sprintf("%s		%s,\n", field, description)
+		if i != len(fieldAndDesc)-1 {
+			stmt += fmt.Sprintf("%s		%s,\n", field, description)
+		} else {
+			stmt += fmt.Sprintf("%s		%s\n", field, description)
+		}
 	}
 
 	stmt += ")"
@@ -146,9 +156,14 @@ func (db *PostgresEngine) makeInsertStmtAndParameters(mapRep map[string]any) (st
 // returns objects with any type so users can rebuild
 // objects with their type builders
 func (db *PostgresEngine) Get(id string) (any, error) {
-	stmt := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", db.tableName)
-	row, _ := db.conn.Query(context.Background(), stmt, id)
-	mapRep, err := pgx.RowToMap(row)
+	stmt := fmt.Sprintf("SELECT * FROM %s WHERE id = $1;", db.tableName)
+	row, err := db.conn.Query(context.Background(), stmt, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	mapRep, err := pgx.CollectOneRow(row, pgx.RowToMap)
 	if err != nil {
 		return nil, err
 	}

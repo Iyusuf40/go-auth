@@ -17,7 +17,8 @@ func (u *User) buildUser(obj any) *User {
 	if map_rep, ok := obj.(map[string]any); ok {
 		usr_ob := new(User)
 		usr_ob.Name = map_rep["name"].(string)
-		usr_ob.Age = int(map_rep["age"].(float64))
+		age, _ := storage.GetFloat64Equivalent(map_rep["age"])
+		usr_ob.Age = int(age)
 		if usr_ob.Name == "" {
 			return nil
 		}

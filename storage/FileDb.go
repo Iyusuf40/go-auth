@@ -170,6 +170,10 @@ func (db *FileDb) DeleteDb() error {
 	return err
 }
 
+func GetFloat64Equivalent(value any) (float64, bool) {
+	return getFloat64Equivalent(value)
+}
+
 func getFloat64Equivalent(value any) (float64, bool) {
 	if concVal, ok := value.(int); ok {
 		return float64(concVal), true
