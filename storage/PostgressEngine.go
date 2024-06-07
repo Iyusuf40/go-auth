@@ -8,6 +8,7 @@ import (
 	"os"
 	"sort"
 
+	"github.com/Iyusuf40/go-auth/config"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
@@ -23,7 +24,8 @@ func (db *PostgresEngine) New(database, tableName string, fieldAndDesc ...SQL_TA
 	if database == "" || tableName == "" {
 		panic("PostgresEngine.New: db_path and objectType must not be empty")
 	}
-	postgresUrl := "postgres://yusuf:0@localhost:5432/" + database
+	postgresUrl := fmt.Sprintf("postgres://%s:%s@%s:5432/%s",
+		config.USER, config.PASSWORD, config.HOST, database)
 	conn, err := pgx.Connect(context.Background(), postgresUrl)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "PostgresEngine.New: Unable to connect to database: %v", err)

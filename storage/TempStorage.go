@@ -8,6 +8,10 @@ type TempStore interface {
 	DelKey(key string) bool
 }
 
-func GET_TempStore(database, recordsName string) TempStore {
+func GET_TempStore(typ, database, recordsName string) TempStore {
+	if typ == "redis" {
+		DEFAULT_REDIS_DB := 0
+		return MakeRedisWrapper(DEFAULT_REDIS_DB)
+	}
 	return MakeTempStoreFileDbImpl(database, recordsName)
 }
