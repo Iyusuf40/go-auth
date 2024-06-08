@@ -20,6 +20,8 @@ func beforeEachUST() {
 func afterEachUST() {
 	if config.DBMS == "postgres" {
 		storage.RemovePostgressEngineSingleton(users_storage_test_db_path, "users", true)
+	} else if config.DBMS == "mongo" {
+		storage.RemoveMongoSingleton(users_storage_test_db_path, "users", true)
 	} else {
 		storage.RemoveDbSingleton(users_storage_test_db_path, "users")
 		os.Remove(users_storage_test_db_path)

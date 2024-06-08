@@ -25,6 +25,8 @@ func beforeEachUAPIT() {
 func afterEachUAPIT() {
 	if config.DBMS == "postgres" {
 		storage.RemovePostgressEngineSingleton(users_api_test_db_path, users_api_test_recordsName, true)
+	} else if config.DBMS == "mongo" {
+		storage.RemoveMongoSingleton(users_api_test_db_path, users_api_test_recordsName, true)
 	} else {
 		storage.RemoveDbSingleton(users_api_test_db_path, users_api_test_recordsName)
 		os.Remove(users_api_test_db_path)

@@ -27,6 +27,9 @@ func afterEachAUTH_TEST() {
 	if config.DBMS == "postgres" {
 		storage.RemovePostgressEngineSingleton(AuthHandler_userstorage_test_db_path, Auth_Users_RecordsName, true)
 		storage.RemovePostgressEngineSingleton(AuthHandler_tempDBstorage_test_db_path, Auth_Users_RecordsName, true)
+	} else if config.DBMS == "mongo" {
+		storage.RemoveMongoSingleton(AuthHandler_userstorage_test_db_path, Auth_Users_RecordsName, true)
+		storage.RemoveMongoSingleton(AuthHandler_tempDBstorage_test_db_path, Auth_Users_RecordsName, true)
 	} else {
 		storage.RemoveDbSingleton(AuthHandler_userstorage_test_db_path, Auth_Users_RecordsName)
 		storage.RemoveDbSingleton(AuthHandler_tempDBstorage_test_db_path, Auth_Users_RecordsName)

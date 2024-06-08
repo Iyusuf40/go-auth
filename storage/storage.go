@@ -39,6 +39,8 @@ func GetDB_Engine(engine_dbms, database, recordsName string, fieldAndDesc ...SQL
 	switch engine_dbms {
 	case "postgres":
 		return MakePostgresEngine(database, recordsName, fieldAndDesc...)
+	case "mongo", "mongodb":
+		return MakeMongoWrapper(database, recordsName)
 	default:
 		return MakeFileDb(database, recordsName)
 	}

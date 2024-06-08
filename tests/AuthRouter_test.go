@@ -26,6 +26,8 @@ func beforeEachUAUTHT() {
 func afterEachUAUTHT() {
 	if config.DBMS == "postgres" {
 		storage.RemovePostgressEngineSingleton(auth_test_db_path, auth_test_user_recordsName, true)
+	} else if config.DBMS == "mongo" {
+		storage.RemoveMongoSingleton(auth_test_db_path, auth_test_user_recordsName, true)
 	} else {
 		storage.RemoveDbSingleton(auth_test_db_path, auth_test_user_recordsName)
 		os.Remove(auth_test_db_path)
