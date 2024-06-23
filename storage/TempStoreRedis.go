@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/Iyusuf40/go-auth/config"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -14,8 +15,8 @@ type RedisWrapper struct {
 func (RW *RedisWrapper) New(db int) TempStore {
 
 	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
+		Addr:     config.RedisUrl,
+		Password: config.RedisPassword,
 		DB:       db,
 	})
 

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Iyusuf40/go-auth/api/controllers"
+	"github.com/Iyusuf40/go-auth/config"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -21,7 +22,8 @@ func ServeAUTH() {
 	e.Logger.Fatal(e.Start(":8081"))
 }
 
-var AUTH_HANDLER = MakeAuthHandler("test", "test", "users")
+var AUTH_HANDLER = MakeAuthHandler(config.TempStoreDb,
+	config.UsersDatabase, config.UsersRecords)
 
 func Login(c echo.Context) error {
 	body := controllers.GetBodyInMap(c)

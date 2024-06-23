@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Iyusuf40/go-auth/config"
 	"github.com/Iyusuf40/go-auth/models"
 	"github.com/Iyusuf40/go-auth/storage"
 	"github.com/labstack/echo/v4"
 )
 
-var UserStorage = storage.MakeUserStorage("test", "users")
+var UserStorage = storage.MakeUserStorage(config.UsersDatabase,
+	config.UsersRecords)
 
 func SaveUser(c echo.Context) error {
 	body := GetBodyInMap(c)
