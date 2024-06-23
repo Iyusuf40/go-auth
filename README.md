@@ -40,6 +40,10 @@ go mod tidy
 
 # Usage
 
+## Setup
+- Write your user model in models/User.go. must have Email and Password fields.
+- If you have setup Postgres as your DBMS, update the userSchema variable in storage/UsersStorage.go to reflect your schema. 
+
 ## Run the application:
 
 ```sh 

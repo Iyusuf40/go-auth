@@ -13,6 +13,13 @@ type UserStorage struct {
 	DB DB_Engine
 }
 
+var userSchema = []SQL_TABLE_COLUMN_FIELD_AND_DESC{
+	{`email`, "VARCHAR(128)"},
+	{`firstName`, "VARCHAR(128)"},
+	{`lastName`, "VARCHAR(128)"},
+	{`phone`, "integer"},
+	{`password`, "VARCHAR(128)"}}
+
 func (us *UserStorage) Get(id string) (models.User, error) {
 	val, err := us.DB.Get(id)
 	if err != nil {
@@ -191,13 +198,7 @@ func MakeUserStorage(database, recordsName string) Storage[models.User] {
 
 	dbms := config.DBMS
 
-	STORAGE, err := GetDB_Engine(dbms, database, recordsName,
-		SQL_TABLE_COLUMN_FIELD_AND_DESC{`email`, "VARCHAR(128)"},
-		SQL_TABLE_COLUMN_FIELD_AND_DESC{`firstName`, "VARCHAR(128)"},
-		SQL_TABLE_COLUMN_FIELD_AND_DESC{`lastName`, "VARCHAR(128)"},
-		SQL_TABLE_COLUMN_FIELD_AND_DESC{`phone`, "integer"},
-		SQL_TABLE_COLUMN_FIELD_AND_DESC{`password`, "VARCHAR(128)"},
-	)
+	STORAGE, err := GetDB_Engine(dbms, database, recordsName, userSchema...)
 
 	if err != nil {
 		panic(err)
