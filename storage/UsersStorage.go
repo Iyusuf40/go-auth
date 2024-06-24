@@ -7,6 +7,7 @@ import (
 
 	"github.com/Iyusuf40/go-auth/config"
 	"github.com/Iyusuf40/go-auth/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserStorage struct {
@@ -70,6 +71,11 @@ func (us *UserStorage) Update(id string, data UpdateDesc) bool {
 		return false
 	}
 
+	if data.Field == "password" {
+		hash, _ := bcrypt.GenerateFromPassword([]byte(data.Value.(string)), 4)
+		data.Value = string(hash)
+	}
+
 	res := us.DB.Update(id, data)
 	us.DB.Commit()
 	return res
@@ -110,21 +116,13 @@ func (us *UserStorage) buildManyUsers(retrievedUsers []map[string]any) []models.
 	return users
 }
 
-func (us *UserStorage) BuildClient(obj any) models.User {
+func (us *UserStorage) BuildClient(objDesc any) models.User {
 
 	// after recovery, zero value of enclosing function
 	// will be returned
 	defer RecoverFromPanic()
 
-	user := models.User{}
-	if map_rep, ok := obj.(map[string]any); ok {
-		user.FirstName = map_rep["firstName"].(string)
-		user.LastName = map_rep["lastName"].(string)
-		user.Email = map_rep["email"].(string)
-		user.Password = map_rep["password"].(string)
-		phoneFloatVal, _ := getFloat64Equivalent(map_rep["phone"])
-		user.Phone = int(phoneFloatVal)
-	}
+	user := GenericBuildClient[models.User](objDesc)
 	return user
 }
 
@@ -134,11 +132,7 @@ func (us *UserStorage) userWithEmailExist(email string) bool {
 }
 
 func (us *UserStorage) isValidUser(user models.User) bool {
-	if user.Email == "" ||
-		user.FirstName == "" ||
-		user.LastName == "" ||
-		user.Phone == 0 ||
-		user.Password == "" {
+	if user.Email == "" || user.Password == "" {
 		return false
 	}
 	return true
@@ -183,12 +177,6 @@ func getMapRepOfUser() map[string]any {
 	jsonBytes, _ := json.Marshal(models.User{})
 	json.Unmarshal(jsonBytes, &mapRep)
 	return mapRep
-}
-
-func RecoverFromPanic() {
-	if r := recover(); r != nil {
-		fmt.Println("UserStorage.BuildClient:", r)
-	}
 }
 
 func MakeUserStorage(database, recordsName string) Storage[models.User] {
