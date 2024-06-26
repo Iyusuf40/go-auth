@@ -4,16 +4,23 @@ const ApiPort = "8080"
 const AuthPort = "8081"
 const BaseApiUrl = "http://localhost:" + ApiPort + "/api/"
 
+// set DBMS to one of "file", "mongodb" or "postgres".
+// for testing the lib we recommend to use the file based db
+// it is fast and requires no installations. If you set DBMS to
+// mongo or postgres, make sure to have them running locally or
+// set up the connections with remote instances as your case may be
 const DBMS = "file"
-const HOST = "localhost"
-const USER = "yusuf"
-const PASSWORD = "0"
+const DB_HOST = "localhost"
+const DB_USER = "yusuf"
+const DB_PASSWORD = "0"
 
 const UsersDatabase = "test"
 const UsersRecords = "users"
 
-const TempStoreDb = "test"
+// set to one of "file" or "redis". If you set it as redis ensure
+// to have a running instance setup properly
 const TempStoreType = "file"
+const TempStoreDb = "test"
 const RedisUrl = "localhost:6379"
 const RedisPassword = ""
 
