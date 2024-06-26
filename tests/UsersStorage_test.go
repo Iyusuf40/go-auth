@@ -93,6 +93,45 @@ func TestUpdateUser(t *testing.T) {
 	}
 }
 
+func TestUpdateUserPassword(t *testing.T) {
+	beforeEachUST()
+	defer afterEachUST()
+
+	password := "xxx"
+
+	user := models.User{
+		Email:     "testmail@mail.com",
+		FirstName: "f_name",
+		LastName:  "l_name",
+		Phone:     8000,
+		Password:  password,
+	}
+
+	newPass := "yyy"
+
+	updateField := "password"
+	updateValue := newPass
+
+	id, success := US.Save(user)
+	if !success {
+		t.Fatal("TestUpdateUserPassword: success should be true; msg:", id)
+	}
+
+	retrievedUser, _ := US.Get(id)
+
+	if usersAreEqual(retrievedUser, user) == false {
+		t.Fatal("TestUpdateUserPassword: retrievedUser should be equal to saved")
+	}
+
+	US.Update(id, storage.UpdateDesc{Field: updateField, Value: updateValue})
+
+	retrievedUser, _ = US.Get(id)
+
+	if !retrievedUser.IsCorrectPassword(newPass) {
+		t.Fatal("TestUpdateUser: retrievedUser.Phone should be equal", updateValue)
+	}
+}
+
 func TestDeleteUser(t *testing.T) {
 	beforeEachUST()
 	defer afterEachUST()

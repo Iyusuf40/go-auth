@@ -1,7 +1,8 @@
 package api
 
 import (
-	"github.com/Iyusuf40/go-auth/api/controllers"
+	"github.com/Iyusuf40/go-auth/api/controllers/user_controller"
+	"github.com/Iyusuf40/go-auth/config"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -11,10 +12,13 @@ func ServeAPI() {
 	e.Use(middleware.Recover())
 
 	g := e.Group("/api")
-	g.POST("/users", controllers.SaveUser)
-	g.GET("/users/:id", controllers.GetUser)
-	g.PUT("/users/:id", controllers.UpdateUser)
-	g.DELETE("/users/:id", controllers.DeleteUser)
+	g.POST("/users", user_controller.SaveUser)
+	g.GET("/users/:id", user_controller.GetUser)
+	g.PUT("/users/:id", user_controller.UpdateUser)
+	g.DELETE("/users/:id", user_controller.DeleteUser)
 
-	e.Logger.Fatal(e.Start(":8080"))
+	// complete signup
+	g.GET("/complete_signup/:signupId", user_controller.CompleteSignup)
+
+	e.Logger.Fatal(e.Start(":" + config.ApiPort))
 }

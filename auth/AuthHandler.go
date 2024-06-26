@@ -12,7 +12,7 @@ type AuthHandler struct {
 	users_store storage.Storage[models.User]
 }
 
-var DEFAULT_SESSION_TIMEOUT = 86400.0
+const DEFAULT_SESSION_TIMEOUT = 86400.0
 
 func (auth_h *AuthHandler) HandleLogin(email, password string) string {
 	retrievedUsers := auth_h.users_store.GetByField("email", email)

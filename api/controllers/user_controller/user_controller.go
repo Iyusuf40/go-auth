@@ -1,10 +1,11 @@
-package controllers
+package user_controller
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 
+	"github.com/Iyusuf40/go-auth/api/controllers"
 	"github.com/Iyusuf40/go-auth/config"
 	"github.com/Iyusuf40/go-auth/models"
 	"github.com/Iyusuf40/go-auth/storage"
@@ -13,9 +14,11 @@ import (
 
 var UserStorage = storage.MakeUserStorage(config.UsersDatabase,
 	config.UsersRecords)
+var SIGN_UP_HANDLER = controllers.MakeSignupHandler(config.TempStoreDb,
+	config.UsersDatabase, config.UsersRecords)
 
 func SaveUser(c echo.Context) error {
-	body := GetBodyInMap(c)
+	body := controllers.GetBodyInMap(c)
 	userDesc, ok := body["data"].(map[string]any)
 	response := map[string]string{}
 
@@ -25,15 +28,45 @@ func SaveUser(c echo.Context) error {
 	}
 
 	user := UserStorage.BuildClient(userDesc)
+
+	if userWithEmailExist(user.Email) {
+		response["error"] = "email already registered"
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	if config.RequireEmailVerification {
+		signupId := SIGN_UP_HANDLER.HandleSignup(user)
+		response["signupId"] = signupId
+		return c.JSON(http.StatusCreated, response)
+	}
+
 	msg, success := UserStorage.Save(user)
 
 	if !success {
 		response["error"] = msg
 		return c.JSON(http.StatusBadRequest, response)
-	} else {
-		response["userId"] = msg
-		return c.JSON(http.StatusCreated, response)
 	}
+
+	response["userId"] = msg
+	return c.JSON(http.StatusCreated, response)
+}
+
+func userWithEmailExist(email string) bool {
+	users := UserStorage.GetByField("email", email)
+	return len(users) >= 1
+}
+
+func CompleteSignup(c echo.Context) error {
+	signupId := c.Param("signupId")
+	response := map[string]string{}
+	userId, success := SIGN_UP_HANDLER.HandleCompleteSignup(signupId)
+	if !success {
+		response["error"] = "failed to complete signup"
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	response["userId"] = userId
+	return c.JSON(http.StatusCreated, response)
 }
 
 func GetUser(c echo.Context) error {
@@ -49,7 +82,7 @@ func GetUser(c echo.Context) error {
 }
 
 func UpdateUser(c echo.Context) error {
-	body := GetBodyInMap(c)
+	body := controllers.GetBodyInMap(c)
 	updateDesc, ok := body["data"].(map[string]any)
 	response := map[string]string{}
 

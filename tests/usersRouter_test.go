@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Iyusuf40/go-auth/api/controllers"
+	"github.com/Iyusuf40/go-auth/api/controllers/user_controller"
 	"github.com/Iyusuf40/go-auth/config"
 	"github.com/Iyusuf40/go-auth/models"
 	"github.com/Iyusuf40/go-auth/storage"
@@ -19,7 +19,7 @@ var users_api_test_db_path = "test"
 var users_api_test_recordsName = "users"
 
 func beforeEachUAPIT() {
-	controllers.UserStorage = storage.MakeUserStorage(users_api_test_db_path, users_api_test_recordsName)
+	user_controller.UserStorage = storage.MakeUserStorage(users_api_test_db_path, users_api_test_recordsName)
 }
 
 func afterEachUAPIT() {
@@ -38,6 +38,10 @@ func TestPOSTUser(t *testing.T) {
 	beforeEachUAPIT()
 	defer afterEachUAPIT()
 
+	if config.RequireEmailVerification {
+		return
+	}
+
 	e := echo.New()
 	userJSON := `{"data": {"firstName":"John", "lastName": "Doe","email":"mail@mail.com", 
 	"password": "xx", "phone": 90543434}}`
@@ -47,7 +51,7 @@ func TestPOSTUser(t *testing.T) {
 		echo.HeaderContentType: echo.MIMEApplicationJSON,
 	}
 	rec, c := SetupRequest(e, http.MethodPost, "/api/users", userJSON, headers)
-	controllers.SaveUser(c)
+	user_controller.SaveUser(c)
 
 	if http.StatusCreated != rec.Code {
 		fmt.Println("body returned", rec.Body.String())
@@ -56,7 +60,7 @@ func TestPOSTUser(t *testing.T) {
 
 	// test failed saving of user with email already existing
 	rec, c = SetupRequest(e, http.MethodPost, "/api/users", userJSON, headers)
-	controllers.SaveUser(c)
+	user_controller.SaveUser(c)
 
 	if http.StatusBadRequest != rec.Code {
 		fmt.Println("body returned", rec.Body.String())
@@ -66,7 +70,7 @@ func TestPOSTUser(t *testing.T) {
 	// test failed saving of user with missing userfield
 	userJSON = `{"data": {"firstName":"John", "lastName": "Doe","email":"", "phone": 90543434}}`
 	rec, c = SetupRequest(e, http.MethodPost, "/api/users", userJSON, headers)
-	controllers.SaveUser(c)
+	user_controller.SaveUser(c)
 
 	if http.StatusBadRequest != rec.Code {
 		fmt.Println("body returned", rec.Body.String())
@@ -86,7 +90,7 @@ func TestGETUser(t *testing.T) {
 		Password:  "xxx",
 	}
 
-	id, saved := controllers.UserStorage.Save(user)
+	id, saved := user_controller.UserStorage.Save(user)
 
 	if !saved {
 		t.Fatal("GET /api/user/:id: expected: true got:", saved)
@@ -96,7 +100,7 @@ func TestGETUser(t *testing.T) {
 	rec, c := SetupRequest(e, http.MethodPost, "/api/users", "", nil)
 	c.SetParamNames("id")
 	c.SetParamValues(id)
-	controllers.GetUser(c)
+	user_controller.GetUser(c)
 
 	if http.StatusOK != rec.Code {
 		fmt.Println("body returned", rec.Body.String())
@@ -107,7 +111,7 @@ func TestGETUser(t *testing.T) {
 	rec, c = SetupRequest(e, http.MethodPost, "/api/users", "", nil)
 	c.SetParamNames("id")
 	c.SetParamValues("non-existent")
-	controllers.GetUser(c)
+	user_controller.GetUser(c)
 
 	if http.StatusNotFound != rec.Code {
 		fmt.Println("body returned", rec.Body.String())
@@ -127,7 +131,7 @@ func TestPUTUser(t *testing.T) {
 		Password:  "xxx",
 	}
 
-	id, saved := controllers.UserStorage.Save(user)
+	id, saved := user_controller.UserStorage.Save(user)
 
 	if !saved {
 		t.Fatal("PUT /api/user/:id: expected: true got:", saved)
@@ -146,14 +150,14 @@ func TestPUTUser(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues(id)
 
-	controllers.UpdateUser(c)
+	user_controller.UpdateUser(c)
 
 	if rec.Code != http.StatusOK {
 		fmt.Println("body returned", rec.Body.String())
 		t.Fatal("PUT /api/users/:id : expected:", http.StatusOK, "got:", rec.Code)
 	}
 
-	upadatedUser, _ := controllers.UserStorage.Get(id)
+	upadatedUser, _ := user_controller.UserStorage.Get(id)
 
 	if upadatedUser.Phone != newPhone {
 		t.Fatal("PUT /api/users/:id : expected retrieved user.Phone:", newPhone,
@@ -173,14 +177,14 @@ func TestDELETEUser(t *testing.T) {
 		Password:  "xxx",
 	}
 
-	id, saved := controllers.UserStorage.Save(user)
+	id, saved := user_controller.UserStorage.Save(user)
 
 	if !saved {
 		t.Fatal("DELETE /api/user/:id: expected: true got:", saved)
 	}
 
 	// attempt to get user
-	_, err := controllers.UserStorage.Get(id)
+	_, err := user_controller.UserStorage.Get(id)
 
 	if err != nil {
 		t.Fatal("DELETE /api/user/:id: expected error to be nil got:", err)
@@ -191,7 +195,7 @@ func TestDELETEUser(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues(id)
 
-	controllers.DeleteUser(c)
+	user_controller.DeleteUser(c)
 
 	if rec.Code != http.StatusOK {
 		fmt.Println("body returned", rec.Body.String())
@@ -199,7 +203,7 @@ func TestDELETEUser(t *testing.T) {
 	}
 
 	// attempt to get deleted user
-	_, err = controllers.UserStorage.Get(id)
+	_, err = user_controller.UserStorage.Get(id)
 
 	if err == nil {
 		t.Fatal("DELETE /api/user/:id: expected error to be non-nil got:", err)

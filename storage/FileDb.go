@@ -216,7 +216,7 @@ func MakeFileDb(db_path string, recordsName string) (*FileDb, error) {
 	}
 
 	if path == "" {
-		path = "file_db.json"
+		panic("MakeFileDb: db_path cannot be empty")
 	}
 
 	key := path + recordsName
@@ -241,7 +241,7 @@ func RemoveDbSingleton(db_path, recordsName string) {
 	}
 
 	if db_path == "" {
-		db_path = "file_db.json"
+		panic("RemoveDbSingleton: db_path cannot be empty")
 	}
 
 	key := db_path + recordsName

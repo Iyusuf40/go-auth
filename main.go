@@ -1,16 +1,21 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
-	"github.com/Iyusuf40/go-auth/storage"
+	"github.com/Iyusuf40/go-auth/api"
+	"github.com/Iyusuf40/go-auth/auth"
 )
 
 func main() {
-	m, err := storage.MakeMongoWrapper("test", "test")
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-	}
-	fmt.Println(m)
+
+	wait := make(chan int)
+
+	go func() {
+		api.ServeAPI()
+	}()
+
+	go func() {
+		auth.ServeAUTH()
+	}()
+
+	<-wait
 }
