@@ -17,10 +17,15 @@ const TempStoreType = "file"
 const RedisUrl = "localhost:6379"
 const RedisPassword = ""
 
-const GmailPassword = "vcmu kvwj kjgp lxyi"
-const GmailSource = "punkgts40@gmail.com"
+const GmailPassword = "your mail's app password"
+const GmailSource = "your_mail@mail.com"
 
-const RequireEmailVerification = true
+// while creating a user via the POST /api/users router
+// if RequireEmailVerification is set to true, the registering
+// user will be sent a confirmation link to their email
+// that is valid for 24 hours. Only after clicking the link
+// would he be registered.
+const RequireEmailVerification = false
 
 // you can change this message to your liking
 // so far as you keep the `##link##` somewhere in your
