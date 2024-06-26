@@ -25,7 +25,7 @@ func (db *PostgresEngine) New(database, tableName string, fieldAndDesc ...SQL_TA
 		panic("PostgresEngine.New: db_path and objectType must not be empty")
 	}
 	postgresUrl := fmt.Sprintf("postgres://%s:%s@%s:5432/%s",
-		config.USER, config.PASSWORD, config.HOST, database)
+		config.DB_USER, config.DB_PASSWORD, config.DB_HOST, database)
 	conn, err := pgx.Connect(context.Background(), postgresUrl)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "PostgresEngine.New: Unable to connect to database: %v", err)

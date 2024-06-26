@@ -61,7 +61,7 @@ func Login(c echo.Context) error {
 
 func Logout(c echo.Context) error {
 	body := controllers.GetBodyInMap(c)
-	userDesc, ok := body["data"].(map[string]any)
+	sessionDesc, ok := body["data"].(map[string]any)
 	response := map[string]string{}
 
 	if !ok {
@@ -69,7 +69,7 @@ func Logout(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, response)
 	}
 
-	sessionId, sessionId_ok := userDesc["sessionId"].(string)
+	sessionId, sessionId_ok := sessionDesc["sessionId"].(string)
 
 	if !sessionId_ok {
 		response["error"] = "sessionId required to logout"
@@ -83,7 +83,7 @@ func Logout(c echo.Context) error {
 
 func IsLoggedIn(c echo.Context) error {
 	body := controllers.GetBodyInMap(c)
-	userDesc, ok := body["data"].(map[string]any)
+	sessionDesc, ok := body["data"].(map[string]any)
 	response := map[string]any{}
 
 	if !ok {
@@ -91,7 +91,7 @@ func IsLoggedIn(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, response)
 	}
 
-	sessionId, sessionId_ok := userDesc["sessionId"].(string)
+	sessionId, sessionId_ok := sessionDesc["sessionId"].(string)
 
 	if !sessionId_ok {
 		response["error"] = "sessionId required to check if user is logged in"
