@@ -1,6 +1,9 @@
 package models
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"github.com/Iyusuf40/go-auth/config"
+	"golang.org/x/crypto/bcrypt"
+)
 
 type User struct {
 	Email     string `json:"email"`
@@ -11,7 +14,7 @@ type User struct {
 }
 
 func (user *User) HashPassword() {
-	hash, _ := bcrypt.GenerateFromPassword([]byte(user.Password), 4)
+	hash, _ := bcrypt.GenerateFromPassword([]byte(user.Password), config.UserPassowrdHashCost)
 	user.Password = string(hash)
 }
 

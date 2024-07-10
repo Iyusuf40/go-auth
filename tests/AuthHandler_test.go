@@ -159,3 +159,80 @@ func TestHandleLogout(t *testing.T) {
 		t.Fatal("TestHandleLogout: expected is_logged_in to be false")
 	}
 }
+
+func TestHandleForgotPassword(t *testing.T) {
+	beforeEachAUTH_TEST()
+	defer afterEachAUTH_TEST()
+
+	// test wrong email
+
+	if AUTH_HANDLER.HandleForgotPassword("non-existent-email") != "" {
+		t.Fatal("TestHandleForgotPassword: return value should be ''")
+	}
+
+	email := "testmail@mail.com"
+	password := "xxx"
+
+	user := models.User{
+		Email:     email,
+		FirstName: "f_name",
+		LastName:  "l_name",
+		Phone:     8000,
+		Password:  password,
+	}
+
+	_, success := AUTH_US.Save(user)
+
+	if !success {
+		t.Fatal("TestHandleForgotPassword: success should be true")
+	}
+
+	// test existing email
+	passwordResetToken := AUTH_HANDLER.HandleForgotPassword(email)
+
+	if passwordResetToken == "" {
+		t.Fatal("TestHandleForgotPassword: passwordResetToken should not be empty")
+	}
+}
+
+func TestHandleResetPassword(t *testing.T) {
+	beforeEachAUTH_TEST()
+	defer afterEachAUTH_TEST()
+
+	// test wrong email
+
+	newPassword := "new pass"
+
+	if AUTH_HANDLER.HandleUpdatePassword("non-existent-email", newPassword) != false {
+		t.Fatal("TestHandleUpdatePassword: return value should be false")
+	}
+
+	email := "testmail@mail.com"
+	password := "xxx"
+
+	user := models.User{
+		Email:     email,
+		FirstName: "f_name",
+		LastName:  "l_name",
+		Phone:     8000,
+		Password:  password,
+	}
+
+	_, success := AUTH_US.Save(user)
+
+	if !success {
+		t.Fatal("TestHandleUpdatePassword: success should be true")
+	}
+
+	passwordResetToken := AUTH_HANDLER.HandleForgotPassword(email)
+
+	if passwordResetToken == "" {
+		t.Fatal("TestHandleUpdatePassword: passwordResetToken should not be empty")
+	}
+
+	passwordUpdateIsSuccessful := AUTH_HANDLER.HandleUpdatePassword(passwordResetToken, newPassword)
+
+	if !passwordUpdateIsSuccessful {
+		t.Fatal("TestHandleUpdatePassword: passwordReset should be successful")
+	}
+}

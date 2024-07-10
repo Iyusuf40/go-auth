@@ -72,7 +72,7 @@ func (us *UserStorage) Update(id string, data UpdateDesc) bool {
 	}
 
 	if data.Field == "password" {
-		hash, _ := bcrypt.GenerateFromPassword([]byte(data.Value.(string)), 4)
+		hash, _ := bcrypt.GenerateFromPassword([]byte(data.Value.(string)), config.UserPassowrdHashCost)
 		data.Value = string(hash)
 	}
 

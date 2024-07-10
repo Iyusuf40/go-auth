@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/Iyusuf40/go-auth/api/controllers"
@@ -18,6 +19,9 @@ func ServeAUTH() {
 	g.GET("/logout", Logout)
 
 	g.PUT("/isloggedin", IsLoggedIn)
+
+	g.POST("forgot_password", ForgotPassword)
+	g.POST("reset_password/:passwordResetToken", ResetPassword)
 
 	e.Logger.Fatal(e.Start(":" + config.AuthPort))
 }
@@ -101,5 +105,48 @@ func IsLoggedIn(c echo.Context) error {
 	isLoggedIn := AUTH_HANDLER.IsLoggedIn(sessionId)
 	response["isLoggedIn"] = isLoggedIn
 
+	return c.JSON(http.StatusOK, response)
+}
+
+func ForgotPassword(c echo.Context) error {
+	body := controllers.GetBodyInMap(c)
+	email, ok := body["data"].(map[string]any)["email"].(string)
+	if !ok {
+		response := map[string]any{"error": "Invalid email format"}
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	passwordResetToken := AUTH_HANDLER.HandleForgotPassword(email)
+	if passwordResetToken == "" {
+		response := map[string]any{"error": "User not found or email sending failed"}
+		return c.JSON(http.StatusNotFound, response)
+	}
+
+	// Assuming we have an API endpoint for confirming the reset link and setting a new password
+	resetLink := fmt.Sprintf("%s/reset_password/%s", config.BaseAuthUrl, passwordResetToken)
+	response := map[string]any{"message": "Password reset initiated. Please check your email for instructions.", "resetLink": resetLink}
+	return c.JSON(http.StatusOK, response)
+}
+
+func ResetPassword(c echo.Context) error {
+	body := controllers.GetBodyInMap(c)
+	token, ok := body["data"].(map[string]any)["resetToken"].(string)
+	if !ok || token == "" {
+		response := map[string]any{"error": "Invalid or missing password reset token"}
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	newPassword, ok := body["data"].(map[string]any)["password"].(string)
+	if !ok || newPassword == "" {
+		response := map[string]any{"error": "Invalid or missing password"}
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	if !AUTH_HANDLER.HandleUpdatePassword(token, newPassword) {
+		response := map[string]any{"error": "Failed to update password"}
+		return c.JSON(http.StatusInternalServerError, response)
+	}
+
+	response := map[string]any{"message": "Password updated successfully"}
 	return c.JSON(http.StatusOK, response)
 }
