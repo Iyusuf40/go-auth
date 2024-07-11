@@ -122,19 +122,16 @@ func ForgotPassword(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, response)
 	}
 
-	// Assuming we have an API endpoint for confirming the reset link and setting a new password
-	resetLink := fmt.Sprintf("%s/reset_password/%s", config.BaseAuthUrl, passwordResetToken)
-	response := map[string]any{"message": "Password reset initiated. Please check your email for instructions.", "resetLink": resetLink}
+	resetLink := fmt.Sprintf("%s%s%s", config.BaseAuthUrl, "reset_password/", passwordResetToken)
+	response := map[string]any{"message": "Password reset initiated. Please check your email for instructions.",
+		"resetLink":          resetLink,
+		"passwordResetToken": passwordResetToken}
 	return c.JSON(http.StatusOK, response)
 }
 
 func ResetPassword(c echo.Context) error {
 	body := controllers.GetBodyInMap(c)
-	token, ok := body["data"].(map[string]any)["resetToken"].(string)
-	if !ok || token == "" {
-		response := map[string]any{"error": "Invalid or missing password reset token"}
-		return c.JSON(http.StatusBadRequest, response)
-	}
+	passwordResetToken := c.Param("passwordResetToken")
 
 	newPassword, ok := body["data"].(map[string]any)["password"].(string)
 	if !ok || newPassword == "" {
@@ -142,7 +139,7 @@ func ResetPassword(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, response)
 	}
 
-	if !AUTH_HANDLER.HandleUpdatePassword(token, newPassword) {
+	if !AUTH_HANDLER.HandleUpdatePassword(passwordResetToken, newPassword) {
 		response := map[string]any{"error": "Failed to update password"}
 		return c.JSON(http.StatusInternalServerError, response)
 	}

@@ -214,3 +214,128 @@ func TestLogoutUser(t *testing.T) {
 	}
 
 }
+
+func TestForgotPassword(t *testing.T) {
+	// Setup
+	beforeEachUAUTHT()
+	defer afterEachUAUTHT()
+
+	e := echo.New()
+
+	user := models.User{
+		Email:     "testmail@mail.com",
+		FirstName: "f_name",
+		LastName:  "l_name",
+		Phone:     8000,
+		Password:  "xxx",
+	}
+
+	_, success := USER_STORE.Save(user)
+
+	if !success {
+		t.Fatal("TestForgotPassword: success should be true")
+	}
+
+	// test wrong email
+	forgotPasswordJSON := `{"data": {"email":"wrongmail@mail.com"}}`
+
+	headers := map[string]string{
+		echo.HeaderContentType: echo.MIMEApplicationJSON,
+	}
+
+	rec, c := SetupRequest(e, http.MethodPost, "/auth/fotgot_password", forgotPasswordJSON, headers)
+	auth.ForgotPassword(c)
+
+	if http.StatusNotFound != rec.Code {
+		fmt.Println("body returned", rec.Body.String())
+		t.Fatal("POST /auth/forgot_password: expected:", http.StatusNotFound, "got:", rec.Code)
+	}
+
+	forgotPasswordJSON = `{"data": {"email":"testmail@mail.com"}}`
+
+	rec, c = SetupRequest(e, http.MethodPost, "/auth/fotgot_password", forgotPasswordJSON, headers)
+	auth.ForgotPassword(c)
+
+	if http.StatusOK != rec.Code {
+		fmt.Println("body returned", rec.Body.String())
+		t.Fatal("POST /auth/forgot_password: expected:", http.StatusOK, "got:", rec.Code)
+	}
+}
+
+func TestResetPassword(t *testing.T) {
+	// Setup
+	beforeEachUAUTHT()
+	defer afterEachUAUTHT()
+
+	e := echo.New()
+
+	user := models.User{
+		Email:     "testmail@mail.com",
+		FirstName: "f_name",
+		LastName:  "l_name",
+		Phone:     8000,
+		Password:  "xxx",
+	}
+
+	_, success := USER_STORE.Save(user)
+
+	if !success {
+		t.Fatal("TestForgotPassword: success should be true")
+	}
+
+	headers := map[string]string{
+		echo.HeaderContentType: echo.MIMEApplicationJSON,
+	}
+
+	newPassword := "newPassword"
+
+	loginDataJSON := fmt.Sprintf(`{"data": {"email":"testmail@mail.com", "password": "%s"}}`, newPassword)
+
+	// test login with newPassword before update password
+	rec, c := SetupRequest(e, http.MethodPost, "/auth/login", loginDataJSON, headers)
+	auth.Login(c)
+
+	// login user should fail
+	if rec.Code != http.StatusBadRequest {
+		fmt.Println("body returned", rec.Body.String())
+		t.Fatal("POST /auth/login: in TestResetPassword expected:", http.StatusBadRequest, "got:", rec.Code)
+	}
+
+	// initiate forgot_password process
+	forgotPasswordJSON := `{"data": {"email":"testmail@mail.com"}}`
+
+	rec, c = SetupRequest(e, http.MethodPost, "/auth/fotgot_password", forgotPasswordJSON, headers)
+	auth.ForgotPassword(c)
+
+	if http.StatusOK != rec.Code {
+		fmt.Println("body returned", rec.Body.String())
+		t.Fatal("POST /auth/forgot_password: in TestResetPassword: expected:", http.StatusOK, "got:", rec.Code)
+	}
+
+	recBody := controllers.ReadFromReaderIntoMap(rec.Body)
+
+	passwordResetToken := recBody["passwordResetToken"].(string)
+	newPasswordJSON := `{"data": {"password":"newPassword"}}`
+
+	rec, c = SetupRequest(e, http.MethodPost, "/auth/reset_password/"+passwordResetToken,
+		newPasswordJSON, headers)
+
+	c.SetParamNames("passwordResetToken")
+	c.SetParamValues(passwordResetToken)
+	auth.ResetPassword(c)
+
+	if http.StatusOK != rec.Code {
+		fmt.Println("body returned", rec.Body.String())
+		t.Fatal("POST /auth/reset_password: expected:", http.StatusOK, "got:", rec.Code)
+	}
+
+	// test login with newPassword after update password
+	rec, c = SetupRequest(e, http.MethodPost, "/auth/login", loginDataJSON, headers)
+	auth.Login(c)
+
+	// login user should fail
+	if rec.Code != http.StatusOK {
+		fmt.Println("body returned", rec.Body.String())
+		t.Fatal("POST /auth/login: in TestResetPassword expected:", http.StatusOK, "got:", rec.Code)
+	}
+}
